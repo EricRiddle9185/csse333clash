@@ -2,8 +2,10 @@ package clash.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Properties;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,40 +23,58 @@ public class GUI {
 	public static final Font LARGE_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 32);
 	public static final Font MEDIUM_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 24);
 	public static final Font SMALL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 20);
-	
+
 	// variables
-	private static int[] building_category_sizes = {3, 0, 0};
+	private static int[] building_category_sizes = { 3, 0, 0 };
 	private static int selected_building_category = 0;
 	private static int selected_building_num = 0;
 	private static boolean build_mode = false;
-	
+
 	// test data
 	private static final BuildingType CANNON = new Defense("Cannon", 1, 10, 100, 1, 100, 0, 10, 10, "Single", "Ground");
-	private static final BuildingType ARCHER_TOWER = new Defense("Archer Tower", 1, 60, 200, 2, 250, 0, 5, 20, "Single", "Any");
-	private static final BuildingType WIZARD_TOWER = new Defense("Wizard Tower", 1, 300, 300, 3, 500, 0, 5, 10, "Multi", "Any");
-	private static final ArrayList<BuildingType> DEFENSES = new ArrayList<>(Arrays.asList(CANNON, ARCHER_TOWER, WIZARD_TOWER));
-	
+	private static final BuildingType ARCHER_TOWER = new Defense("Archer Tower", 1, 60, 200, 2, 250, 0, 5, 20, "Single",
+			"Any");
+	private static final BuildingType WIZARD_TOWER = new Defense("Wizard Tower", 1, 300, 300, 3, 500, 0, 5, 10, "Multi",
+			"Any");
+	private static final ArrayList<BuildingType> DEFENSES = new ArrayList<>(
+			Arrays.asList(CANNON, ARCHER_TOWER, WIZARD_TOWER));
+
 	// more test data
 	private static final Building BUILDING_A = new Building(CANNON, null, 2, 3);
 	private static final Building BUILDING_B = new Building(ARCHER_TOWER, null, 8, 2);
 	private static final Building BUILDING_C = new Building(WIZARD_TOWER, null, 5, 7);
 	private static final ArrayList<Building> PLAYER_BUILDINGS = new ArrayList<>();
 
+	// DB connection info
+	private static final String SERVER = "golem.csse.rose-hulman.edu";
+	private static final String DB_NAME = "riddleetwagnernbdonovagd";
+	private static final String USERNAME = "Clashgui";
+	private static final String PASSWORD = "Password123";
+
 	public static void main(String[] args) {
-		//------//
+		DatabaseConn dbConn = new DatabaseConn(SERVER, DB_NAME);
+		dbConn.connect(USERNAME, PASSWORD);
+
+		List<BuildingType> buildingTypes = dbConn.getBuildingTypes();
+
+		for (Building kind : dbConn.getBuildings(1, buildingTypes)) {
+			System.out.println(kind.toString());
+		}
+
+		// ------//
 		// Init //
-		//------//
+		// ------//
 		JFrame mainFrame = new JFrame("Clash of Clans");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setLayout(new GridBagLayout());
 		mainFrame.setSize(1140, 680);
-//		mainFrame.setResizable(false);
+		// mainFrame.setResizable(false);
 		GridBagConstraints gbc;
-		
-		//------//
+
+		// ------//
 		// BASE //
-		//------//
-//		JPanel basePanel = new JPanel(new GridLayout(BASE_HEIGHT, BASE_WIDTH));
+		// ------//
+		// JPanel basePanel = new JPanel(new GridLayout(BASE_HEIGHT, BASE_WIDTH));
 		JPanel basePanel = new JPanel(new GridBagLayout());
 		basePanel.setPreferredSize(new Dimension(640, 640));
 		basePanel.setBackground(Color.GREEN.darker());
@@ -64,13 +84,13 @@ public class GUI {
 		gbc.gridy = 0;
 		gbc.weightx = 1;
 		// BASE GRID BUTTONS
-//		ArrayList<Building> buildings = Arrays.asList(CANNON);
+		// ArrayList<Building> buildings = Arrays.asList(CANNON);
 		makeBasePanel(PLAYER_BUILDINGS, basePanel);
 		mainFrame.add(basePanel, gbc);
-		
-		//------------//
+
+		// ------------//
 		// SIDE PANEL //
-		//------------//
+		// ------------//
 		JTabbedPane sidePanel = new JTabbedPane();
 		sidePanel.setPreferredSize(new Dimension(480, 640));
 		sidePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -84,31 +104,31 @@ public class GUI {
 		gbc.weightx = 0;
 		mainFrame.add(sidePanel, gbc);
 
-		//------------//
+		// ------------//
 		// USER PANEL //
-		//------------//
+		// ------------//
 		JPanel userPanel = makeUserPanel();
 		sidePanel.addTab("User", userPanel);
 
-		//-------------//
+		// -------------//
 		// BUILD PANEL //
-		//-------------//
+		// -------------//
 		JPanel buildPanel = new JPanel(new BorderLayout());
 		makeBuildPanel(buildPanel, CANNON);
 		sidePanel.addTab("Build", buildPanel);
 
-		//-------------//
+		// -------------//
 		// TRAIN PANEL //
-		//-------------//
+		// -------------//
 		JPanel trainPanel = new JPanel();
 		sidePanel.addTab("Train", trainPanel);
-		
-		//--------//
+
+		// --------//
 		// FINISH //
-		//--------//
+		// --------//
 		mainFrame.setVisible(true);
 	}
-	
+
 	private static void makeBasePanel(ArrayList<Building> buildings, JPanel basePanel) {
 		basePanel.removeAll();
 		for (int i = 0; i < BASE_HEIGHT; i++) {
@@ -158,7 +178,7 @@ public class GUI {
 							Building newBuilding = new Building(newBuildingType, null, posX, posY);
 							if (newBuildingType != null) {
 								boolean valid1 = posX + newBuildingType.size <= BASE_WIDTH
-											  && posY + newBuildingType.size <= BASE_HEIGHT;
+										&& posY + newBuildingType.size <= BASE_HEIGHT;
 								for (Building b : buildings) {
 									if (isOverlapping(b, posX, posY, newBuildingType.size)) {
 										valid1 = false;
@@ -184,7 +204,8 @@ public class GUI {
 		basePanel.repaint();
 	}
 
-	// can be used for both drawing the base and checking that a building can be placed
+	// can be used for both drawing the base and checking that a building can be
+	// placed
 	private static boolean isOverlapping(Building building, int posX, int posY, int size) {
 		int left = posX;
 		int right = posX + size - 1;
@@ -194,13 +215,13 @@ public class GUI {
 		int bRight = building.posX + building.buildingType.size - 1;
 		int bTop = building.posY;
 		int bBottom = building.posY + building.buildingType.size - 1;
-		return (((left >= bLeft && left <= bRight) || (right >= bLeft && right <= bRight))  &&
-			    ((top >= bTop && top <= bBottom) || (bottom >= bTop && bottom <= bBottom))) ||
+		return (((left >= bLeft && left <= bRight) || (right >= bLeft && right <= bRight)) &&
+				((top >= bTop && top <= bBottom) || (bottom >= bTop && bottom <= bBottom))) ||
 
-			   (((bLeft >= left && bLeft <= right) || (bRight >= left && bRight <= right))  &&
-			    ((bTop >= top && bTop <= bottom) || (bBottom >= top && bBottom <= bottom)));
+				(((bLeft >= left && bLeft <= right) || (bRight >= left && bRight <= right)) &&
+						((bTop >= top && bTop <= bottom) || (bBottom >= top && bBottom <= bottom)));
 	}
-	
+
 	private static JPanel makeUserPanel() {
 		JPanel userPanel = new JPanel();
 		userPanel.setLayout(new BoxLayout(userPanel, BoxLayout.Y_AXIS));
@@ -219,7 +240,7 @@ public class GUI {
 		goldPanel.add(goldLabel);
 		JProgressBar goldBar = new JProgressBar();
 		goldBar.setForeground(Color.YELLOW);
-		//goldBar.addChangeListener(null);
+		// goldBar.addChangeListener(null);
 		goldBar.setValue(gold * 100 / maxGold);
 		goldPanel.add(goldBar);
 		userPanel.add(goldPanel);
@@ -233,7 +254,7 @@ public class GUI {
 		elixirPanel.add(elixirLabel);
 		JProgressBar elixirBar = new JProgressBar();
 		elixirBar.setForeground(Color.MAGENTA);
-		//elixirBar.addChangeListener(null);
+		// elixirBar.addChangeListener(null);
 		elixirBar.setValue(elixir * 100 / maxElixir);
 		elixirPanel.add(elixirBar);
 		userPanel.add(elixirPanel);
@@ -246,7 +267,7 @@ public class GUI {
 		return userPanel;
 
 	}
-	
+
 	private static void makeBuildPanel(JPanel buildPanel, BuildingType building) {
 		buildPanel.removeAll();
 		// BUILDING CATEGORIES
@@ -299,7 +320,8 @@ public class GUI {
 		rightArrow.setFocusPainted(false);
 		rightArrow.setFont(MEDIUM_FONT);
 		rightArrow.addActionListener((ActionEvent e) -> {
-			selected_building_num = Math.min(building_category_sizes[selected_building_category] - 1, selected_building_num + 1);
+			selected_building_num = Math.min(building_category_sizes[selected_building_category] - 1,
+					selected_building_num + 1);
 			switch (selected_building_category) {
 				case 0:
 					makeBuildPanel(buildPanel, DEFENSES.get(selected_building_num));
@@ -310,9 +332,9 @@ public class GUI {
 		JButton buildButton = new JButton("Build");
 		buildButton.setFont(LARGE_FONT);
 		buildButton.addActionListener((ActionEvent e) -> {
-			
+
 		});
-//		arrowPanel.add(buildButton, BorderLayout.PAGE_END);
+		// arrowPanel.add(buildButton, BorderLayout.PAGE_END);
 		buildPanel.add(arrowPanel, BorderLayout.PAGE_END);
 		buildPanel.revalidate();
 		buildPanel.repaint();
