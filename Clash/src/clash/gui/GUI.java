@@ -57,9 +57,9 @@ public class GUI {
 
 		List<BuildingType> buildingTypes = dbConn.getBuildingTypes();
 
-		for (Building kind : dbConn.getBuildings(1, buildingTypes)) {
-			System.out.println(kind.buildingType.name + "\n" + kind.buildingType.getBuildingInfo());
-		}
+//		for (Building kind : dbConn.getBuildings(1, buildingTypes)) {
+//			System.out.println(kind.buildingType.name + "\n" + kind.buildingType.getBuildingInfo());
+//		}
 
 		// ------//
 		// Init //
@@ -187,7 +187,6 @@ public class GUI {
 									}
 								}
 								if (valid1) {
-									System.out.println("place buliding");
 //									buildings.add(newBuilding);
 									dbConn.placeBuilding(1, posX, posY); // TODO: add other buildings
 									// TODO: add popups for things like insufficient resources
