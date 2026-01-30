@@ -110,4 +110,22 @@ public class DatabaseConn {
             throw new RuntimeException(e);
         }
     }
+    
+    public boolean placeBuilding(int buildingTypeID, int posX, int posY) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call PlaceBuilding(?, ?, ?, ?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, 1); // TODO: add other players lol
+            stmt.setInt(3, posX);
+            stmt.setInt(4, posY);
+            stmt.setInt(5, buildingTypeID);
+            stmt.execute();
+//            ResultSet results = stmt.executeQuery();
+            // TODO: do smth with the results?
+
+            return true;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

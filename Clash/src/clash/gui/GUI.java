@@ -58,7 +58,7 @@ public class GUI {
 		List<BuildingType> buildingTypes = dbConn.getBuildingTypes();
 
 		for (Building kind : dbConn.getBuildings(1, buildingTypes)) {
-			System.out.println(kind.toString());
+			System.out.println(kind.buildingType.name + "\n" + kind.buildingType.getBuildingInfo());
 		}
 
 		// ------//
@@ -71,9 +71,9 @@ public class GUI {
 		// mainFrame.setResizable(false);
 		GridBagConstraints gbc;
 
-		// ------//
+		//------//
 		// BASE //
-		// ------//
+		//------//
 		// JPanel basePanel = new JPanel(new GridLayout(BASE_HEIGHT, BASE_WIDTH));
 		JPanel basePanel = new JPanel(new GridBagLayout());
 		basePanel.setPreferredSize(new Dimension(640, 640));
@@ -85,7 +85,7 @@ public class GUI {
 		gbc.weightx = 1;
 		// BASE GRID BUTTONS
 		// ArrayList<Building> buildings = Arrays.asList(CANNON);
-		makeBasePanel(PLAYER_BUILDINGS, basePanel);
+		makeBasePanel(dbConn, basePanel);
 		mainFrame.add(basePanel, gbc);
 
 		// ------------//
@@ -129,8 +129,9 @@ public class GUI {
 		mainFrame.setVisible(true);
 	}
 
-	private static void makeBasePanel(ArrayList<Building> buildings, JPanel basePanel) {
+	private static void makeBasePanel(DatabaseConn dbConn, JPanel basePanel) {
 		basePanel.removeAll();
+		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes()); // TODO: add other players
 		for (int i = 0; i < BASE_HEIGHT; i++) {
 			for (int j = 0; j < BASE_WIDTH; j++) {
 				boolean valid = true;
@@ -175,7 +176,7 @@ public class GUI {
 								case 0:
 									newBuildingType = DEFENSES.get(selected_building_num);
 							}
-							Building newBuilding = new Building(newBuildingType, null, posX, posY);
+//							Building newBuilding = new Building(newBuildingType, null, posX, posY);
 							if (newBuildingType != null) {
 								boolean valid1 = posX + newBuildingType.size <= BASE_WIDTH
 										&& posY + newBuildingType.size <= BASE_HEIGHT;
@@ -186,8 +187,11 @@ public class GUI {
 									}
 								}
 								if (valid1) {
-									buildings.add(newBuilding);
-									makeBasePanel(buildings, basePanel);
+									System.out.println("place buliding");
+//									buildings.add(newBuilding);
+									dbConn.placeBuilding(1, posX, posY); // TODO: add other buildings
+									// TODO: add popups for things like insufficient resources
+									makeBasePanel(dbConn, basePanel);
 								}
 							}
 						}
