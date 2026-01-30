@@ -1,4 +1,4 @@
-package clash.domain;
+package clash.data;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -10,6 +10,9 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import clash.domain.Building;
+import clash.domain.BuildingType;
 
 public class DatabaseConn {
     private static final String URL = "jdbc:sqlserver://${dbServer};databaseName=${dbName};user=${user};password={${pass}};encrypt=false;";
@@ -111,21 +114,17 @@ public class DatabaseConn {
         }
     }
     
-    public boolean placeBuilding(int buildingTypeID, int posX, int posY) {
-        try {
-            CallableStatement stmt = this.conn.prepareCall("{? = call PlaceBuilding(?, ?, ?, ?)}");
-            stmt.registerOutParameter(1, Types.INTEGER);
-            stmt.setInt(2, 1); // TODO: add other players lol
-            stmt.setInt(3, posX);
-            stmt.setInt(4, posY);
-            stmt.setInt(5, buildingTypeID);
-            stmt.execute();
-//            ResultSet results = stmt.executeQuery();
-            // TODO: do smth with the results?
+    public boolean placeBuilding(int buildingTypeID, int posX, int posY) throws SQLException {
+		CallableStatement stmt = this.conn.prepareCall("{? = call PlaceBuilding(?, ?, ?, ?)}");
+		stmt.registerOutParameter(1, Types.INTEGER);
+		stmt.setInt(2, 1); // TODO: add other players lol
+		stmt.setInt(3, posX);
+		stmt.setInt(4, posY);
+		stmt.setInt(5, buildingTypeID);
+		stmt.execute();
+//        ResultSet results = stmt.executeQuery();
+		// TODO: do smth with the results?
 
-            return true;
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+		return true;
     }
 }

@@ -2,6 +2,7 @@ package clash.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 
+import clash.data.DatabaseConn;
 import clash.domain.*;
 
 public class GUI {
@@ -188,8 +190,11 @@ public class GUI {
 								}
 								if (valid1) {
 //									buildings.add(newBuilding);
-									dbConn.placeBuilding(1, posX, posY); // TODO: add other buildings
-									// TODO: add popups for things like insufficient resources
+									try {
+										dbConn.placeBuilding(1, posX, posY); // TODO: add other buildings
+									} catch (SQLException e1) {
+										JOptionPane.showMessageDialog(new JFrame(), "Can't place building: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+									}
 									makeBasePanel(dbConn, basePanel);
 								}
 							}
