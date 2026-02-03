@@ -121,11 +121,11 @@ public class DatabaseConn {
     	return buildingTypes;
     }
 
-    public List<Building> getBuildings(int userId, List<BuildingType> buildingTypes) {
+    public List<Building> getBuildings(int playerId, List<BuildingType> buildingTypes) {
         try {
             CallableStatement stmt = this.conn.prepareCall("{? = call GetBuildings(?)}");
             stmt.registerOutParameter(1, Types.INTEGER);
-            stmt.setInt(2, userId);
+            stmt.setInt(2, playerId);
             ResultSet results = stmt.executeQuery();
 
             ArrayList<Building> buildings = new ArrayList<Building>();
@@ -179,5 +179,34 @@ public class DatabaseConn {
 		// TODO: do smth with the results?
 
 		return true;
+    }
+    
+    public int getElixir(int playerID) {
+		try {
+			CallableStatement stmt = this.conn.prepareCall("{? = call GetElixir(?)}");
+			stmt.registerOutParameter(1, Types.INTEGER);
+			stmt.setInt(2, playerID);
+			ResultSet results = stmt.executeQuery();
+			results.next();
+			int elixir = results.getInt("amount");
+			return elixir;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
+    }
+    public int getGold(int playerID) {
+		try {
+			CallableStatement stmt = this.conn.prepareCall("{? = call GetGold(?)}");
+			stmt.registerOutParameter(1, Types.INTEGER);
+			stmt.setInt(2, playerID);
+			ResultSet results = stmt.executeQuery();
+			results.next();
+			int gold = results.getInt("amount");
+			return gold;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
     }
 }

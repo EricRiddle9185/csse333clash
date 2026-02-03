@@ -29,7 +29,7 @@ public class Building {
 		this.posY = posY;
 	}
 	
-	public final JButton getButton(DatabaseConn dbConn) {
+	public final JButton makeButton(DatabaseConn dbConn, JPanel basePanel) {
 		// init
 		Image buildingImage;
 		JButton button = new JButton();
@@ -70,6 +70,9 @@ public class Building {
 			JButton upgradeButton = new JButton("Upgrade");
 			upgradeButton.setFocusPainted(false);
 			upgradeButton.setFont(GUI.LARGE_FONT);
+			upgradeButton.addActionListener((ActionEvent e1) -> {
+				GUI.makeBasePanel(dbConn, basePanel);
+			});
 			bottomPanel.add(upgradeButton);
 			// delete button
 			JButton deleteButton = new JButton("Delete");
@@ -78,6 +81,7 @@ public class Building {
 			deleteButton.addActionListener((ActionEvent e2) -> {
 				dbConn.deleteBuilding(this.id);
 				infoFrame.dispose();
+				GUI.makeBasePanel(dbConn, basePanel);
 			});
 			bottomPanel.add(deleteButton);
 			

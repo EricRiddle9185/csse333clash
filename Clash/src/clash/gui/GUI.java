@@ -52,72 +52,67 @@ public class GUI {
 		DatabaseConn dbConn = new DatabaseConn(SERVER, DB_NAME);
 		dbConn.connect(USERNAME, PASSWORD);
 		
-		// ------//
-		// Init //
-		// ------//
 		JFrame mainFrame = new JFrame("Clash of Clans");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		mainFrame.setLayout(new GridBagLayout());
 		mainFrame.setSize(1140, 680);
+		JPanel mainPanel = new JPanel();
+		makeMainPanel(dbConn, mainPanel);
+		mainFrame.add(mainPanel);
+		mainFrame.setVisible(true);
+	}
+	
+	private static void makeMainPanel(DatabaseConn dbConn, JPanel mainPanel) {
+		mainPanel.removeAll();
+		mainPanel.setLayout(new GridBagLayout());
 		// mainFrame.setResizable(false);
 		GridBagConstraints gbc;
 
-		//------------//
-		// BASE PANEL //
-		//------------//
-		// JPanel basePanel = new JPanel(new GridLayout(BASE_HEIGHT, BASE_WIDTH));
-		JPanel basePanel = new JPanel(new GridBagLayout());
+		// BASE PANEL
+		JPanel basePanel = new JPanel();
 		basePanel.setPreferredSize(new Dimension(640, 640));
 		basePanel.setBackground(Color.GREEN.darker());
-		basePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		basePanel.setBorder(BorderFactory.createMatteBorder(15, 15, 15, 15, Color.GREEN.darker().darker()));
 		gbc = new GridBagConstraints();
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 1;
-		// BASE GRID BUTTONS
-		// ArrayList<Building> buildings = Arrays.asList(CANNON);
 		makeBasePanel(dbConn, basePanel);
-		mainFrame.add(basePanel, gbc);
+		mainPanel.add(basePanel, gbc);
+		
+		// USER PANEL
+		JPanel userPanel = new JPanel();
+		makeUserPanel(dbConn, userPanel);
 
-		// ------------//
-		// SIDE PANEL //
-		// ------------//
+		// SIDE PANEL
 		JTabbedPane sidePanel = new JTabbedPane();
 		sidePanel.setPreferredSize(new Dimension(480, 640));
 		sidePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 		sidePanel.setFont(MEDIUM_FONT);
 		sidePanel.addChangeListener((ChangeEvent e) -> {
 			build_mode = sidePanel.getSelectedIndex() == 1;
+			makeUserPanel(dbConn, userPanel); // refresh user panel, updates gold/elixir bars
 		});
 		gbc = new GridBagConstraints();
 		gbc.gridx = 1;
 		gbc.gridy = 0;
 		gbc.weightx = 0;
-		mainFrame.add(sidePanel, gbc);
+		mainPanel.add(sidePanel, gbc);
 
-		// ------------//
-		// USER PANEL //
-		// ------------//
-		JPanel userPanel = makeUserPanel();
+		// USER PANEL
 		sidePanel.addTab("User", userPanel);
 
-		// -------------//
-		// BUILD PANEL //
-		// -------------//
-		JPanel buildPanel = new JPanel(new BorderLayout());
+		// BUILD PANEL
+		JPanel buildPanel = new JPanel();
 		makeBuildPanel(dbConn, buildPanel);
 		sidePanel.addTab("Build", buildPanel);
 
-		// -------------//
-		// TRAIN PANEL //
-		// -------------//
+		// TRAIN PANEL
 		JPanel trainPanel = new JPanel();
 		sidePanel.addTab("Train", trainPanel);
 
-		// --------//
-		// FINISH //
-		// --------//
-		mainFrame.setVisible(true);
+		// REPAINT
+		mainPanel.revalidate();
+		mainPanel.repaint();
 	}
 	
 	private static BuildingType getSelectedBuildingType(DatabaseConn dbConn) {
@@ -132,8 +127,9 @@ public class GUI {
 		return null;
 	}
 
-	private static void makeBasePanel(DatabaseConn dbConn, JPanel basePanel) {
+	public static void makeBasePanel(DatabaseConn dbConn, JPanel basePanel) {
 		basePanel.removeAll();
+		basePanel.setLayout(new GridBagLayout());
 		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes()); // TODO: add other players
 		for (int i = 0; i < BASE_HEIGHT; i++) {
 			for (int j = 0; j < BASE_WIDTH; j++) {
@@ -153,7 +149,7 @@ public class GUI {
 				}
 				// place a building
 				if (building != null) {
-					JButton button = building.getButton(dbConn);
+					JButton button = building.makeButton(dbConn, basePanel);
 					button.setFocusPainted(false);
 					GridBagConstraints gbc = new GridBagConstraints();
 					gbc.fill = GridBagConstraints.BOTH;
@@ -193,6 +189,7 @@ public class GUI {
 										JOptionPane.showMessageDialog(new JFrame(), "Can't place building: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 									}
 									makeBasePanel(dbConn, basePanel);
+//									makeMainPanel(dbConn, mainPanel); // refresh the screen
 								}
 							}
 						}
@@ -227,8 +224,8 @@ public class GUI {
 						((bTop >= top && bTop <= bottom) || (bBottom >= top && bBottom <= bottom)));
 	}
 
-	private static JPanel makeUserPanel() {
-		JPanel userPanel = new JPanel();
+	private static void makeUserPanel(DatabaseConn dbConn, JPanel userPanel) {
+		userPanel.removeAll();
 		userPanel.setLayout(new BoxLayout(userPanel, BoxLayout.Y_AXIS));
 		// USERNAME
 		JLabel username = new JLabel("Hello, riddleet");
@@ -236,8 +233,8 @@ public class GUI {
 		username.setAlignmentX(Component.CENTER_ALIGNMENT);
 		userPanel.add(username);
 		// GOLD BAR
-		int gold = 500;
-		int maxGold = 1000;
+		int gold = dbConn.getGold(1); // TODO: add more players
+		int maxGold = 10000;
 		JPanel goldPanel = new JPanel();
 		goldPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		JLabel goldLabel = new JLabel("Gold: ");
@@ -250,8 +247,8 @@ public class GUI {
 		goldPanel.add(goldBar);
 		userPanel.add(goldPanel);
 		// ELIXIR BAR
-		int elixir = 500;
-		int maxElixir = 1000;
+		int elixir = dbConn.getElixir(1);
+		int maxElixir = 10000;
 		JPanel elixirPanel = new JPanel();
 		elixirPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		JLabel elixirLabel = new JLabel("Elixir: ");
@@ -269,12 +266,13 @@ public class GUI {
 		attackButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 		attackButton.setFont(GIANT_FONT);
 		userPanel.add(attackButton);
-		return userPanel;
-
+		userPanel.revalidate();
+		userPanel.repaint();
 	}
 
 	private static void makeBuildPanel(DatabaseConn dbConn, JPanel buildPanel) {
 		buildPanel.removeAll();
+		buildPanel.setLayout(new BorderLayout());
 		BuildingType selectedBuildingType = getSelectedBuildingType(dbConn);
 		// BUILDING CATEGORIES
 		JPanel buildingCategoryPanel = new JPanel(new GridLayout(1, 3));
