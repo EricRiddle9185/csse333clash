@@ -4,9 +4,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Properties;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -27,25 +24,23 @@ public class GUI {
 	public static final Font SMALL_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 20);
 
 	// variables
-	private static int[] building_category_sizes = { 3, 0, 0 };
+	private static int[] building_category_sizes = { 3, 4, 2 };
 	private static int selected_building_category = 0;
 	private static int selected_building_num = 0;
 	private static boolean build_mode = false;
 
 	// test data
-	private static final BuildingType CANNON = new Defense("Cannon", 1, 10, 100, 1, 100, 0, 10, 10, "Single", "Ground");
-	private static final BuildingType ARCHER_TOWER = new Defense("Archer Tower", 1, 60, 200, 2, 250, 0, 5, 20, "Single",
-			"Any");
-	private static final BuildingType WIZARD_TOWER = new Defense("Wizard Tower", 1, 300, 300, 3, 500, 0, 5, 10, "Multi",
-			"Any");
-	private static final ArrayList<BuildingType> DEFENSES = new ArrayList<>(
-			Arrays.asList(CANNON, ARCHER_TOWER, WIZARD_TOWER));
+//	private static final BuildingType CANNON = new Defense(1, "Cannon", 1, 10, 100, 1, 100, 0, 10, 10, "Single", "Ground");
+//	private static final BuildingType ARCHER_TOWER = new Defense(6, "Archer Tower", 1, 60, 200, 2, 250, 0, 5, 20, "Single", "Any");
+//	private static final BuildingType WIZARD_TOWER = new Defense(7, "Wizard Tower", 1, 300, 300, 3, 500, 0, 5, 10, "Multi", "Any");
+//	private static final ArrayList<BuildingType> DEFENSES = new ArrayList<>(
+//			Arrays.asList(CANNON, ARCHER_TOWER, WIZARD_TOWER));
 
 	// more test data
-	private static final Building BUILDING_A = new Building(CANNON, null, 2, 3);
-	private static final Building BUILDING_B = new Building(ARCHER_TOWER, null, 8, 2);
-	private static final Building BUILDING_C = new Building(WIZARD_TOWER, null, 5, 7);
-	private static final ArrayList<Building> PLAYER_BUILDINGS = new ArrayList<>();
+//	private static final Building BUILDING_A = new Building(CANNON, null, 2, 3);
+//	private static final Building BUILDING_B = new Building(ARCHER_TOWER, null, 8, 2);
+//	private static final Building BUILDING_C = new Building(WIZARD_TOWER, null, 5, 7);
+//	private static final ArrayList<Building> PLAYER_BUILDINGS = new ArrayList<>();
 
 	// DB connection info
 	private static final String SERVER = "golem.csse.rose-hulman.edu";
@@ -56,13 +51,7 @@ public class GUI {
 	public static void main(String[] args) {
 		DatabaseConn dbConn = new DatabaseConn(SERVER, DB_NAME);
 		dbConn.connect(USERNAME, PASSWORD);
-
-		List<BuildingType> buildingTypes = dbConn.getBuildingTypes();
-
-//		for (Building kind : dbConn.getBuildings(1, buildingTypes)) {
-//			System.out.println(kind.buildingType.name + "\n" + kind.buildingType.getBuildingInfo());
-//		}
-
+		
 		// ------//
 		// Init //
 		// ------//
@@ -73,9 +62,9 @@ public class GUI {
 		// mainFrame.setResizable(false);
 		GridBagConstraints gbc;
 
-		//------//
-		// BASE //
-		//------//
+		//------------//
+		// BASE PANEL //
+		//------------//
 		// JPanel basePanel = new JPanel(new GridLayout(BASE_HEIGHT, BASE_WIDTH));
 		JPanel basePanel = new JPanel(new GridBagLayout());
 		basePanel.setPreferredSize(new Dimension(640, 640));
@@ -116,7 +105,7 @@ public class GUI {
 		// BUILD PANEL //
 		// -------------//
 		JPanel buildPanel = new JPanel(new BorderLayout());
-		makeBuildPanel(buildPanel, CANNON);
+		makeBuildPanel(dbConn, buildPanel);
 		sidePanel.addTab("Build", buildPanel);
 
 		// -------------//
@@ -129,6 +118,18 @@ public class GUI {
 		// FINISH //
 		// --------//
 		mainFrame.setVisible(true);
+	}
+	
+	private static BuildingType getSelectedBuildingType(DatabaseConn dbConn) {
+		switch (selected_building_category) {
+			case 0:
+				return dbConn.getBasicDefenses().get(selected_building_num);
+			case 1:
+				return dbConn.getBasicResources().get(selected_building_num);
+			case 2:
+				return dbConn.getBasicArmies().get(selected_building_num);
+		}
+		return null;
 	}
 
 	private static void makeBasePanel(DatabaseConn dbConn, JPanel basePanel) {
@@ -152,7 +153,7 @@ public class GUI {
 				}
 				// place a building
 				if (building != null) {
-					JButton button = building.getButton();
+					JButton button = building.getButton(dbConn);
 					button.setFocusPainted(false);
 					GridBagConstraints gbc = new GridBagConstraints();
 					gbc.fill = GridBagConstraints.BOTH;
@@ -173,11 +174,7 @@ public class GUI {
 					// button action to create new building
 					button.addActionListener((ActionEvent e) -> {
 						if (build_mode) {
-							BuildingType newBuildingType = null;
-							switch (selected_building_category) {
-								case 0:
-									newBuildingType = DEFENSES.get(selected_building_num);
-							}
+							BuildingType newBuildingType = getSelectedBuildingType(dbConn);
 //							Building newBuilding = new Building(newBuildingType, null, posX, posY);
 							if (newBuildingType != null) {
 								boolean valid1 = posX + newBuildingType.size <= BASE_WIDTH
@@ -191,7 +188,7 @@ public class GUI {
 								if (valid1) {
 //									buildings.add(newBuilding);
 									try {
-										dbConn.placeBuilding(1, posX, posY); // TODO: add other buildings
+										dbConn.placeBuilding(newBuildingType.id, posX, posY); // TODO: add other buildings
 									} catch (SQLException e1) {
 										JOptionPane.showMessageDialog(new JFrame(), "Can't place building: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 									}
@@ -276,28 +273,47 @@ public class GUI {
 
 	}
 
-	private static void makeBuildPanel(JPanel buildPanel, BuildingType building) {
+	private static void makeBuildPanel(DatabaseConn dbConn, JPanel buildPanel) {
 		buildPanel.removeAll();
+		BuildingType selectedBuildingType = getSelectedBuildingType(dbConn);
 		// BUILDING CATEGORIES
 		JPanel buildingCategoryPanel = new JPanel(new GridLayout(1, 3));
+		// defenses button
 		JButton defensesButton = new JButton("Defences");
 		defensesButton.setFocusPainted(false);
 		defensesButton.setFont(SMALL_FONT);
+		defensesButton.addActionListener((ActionEvent e) -> {
+			selected_building_category = 0;
+			selected_building_num = 0;
+			makeBuildPanel(dbConn, buildPanel);
+		});
 		buildingCategoryPanel.add(defensesButton);
+		// resources button
 		JButton resourcesButton = new JButton("Resources");
 		resourcesButton.setFocusPainted(false);
 		resourcesButton.setFont(SMALL_FONT);
+		resourcesButton.addActionListener((ActionEvent e) -> {
+			selected_building_category = 1;
+			selected_building_num = 0;
+			makeBuildPanel(dbConn, buildPanel);
+		});
 		buildingCategoryPanel.add(resourcesButton);
+		// army button
 		JButton armyButton = new JButton("Army");
 		armyButton.setFocusPainted(false);
 		armyButton.setFont(SMALL_FONT);
+		armyButton.addActionListener((ActionEvent e) -> {
+			selected_building_category = 2;
+			selected_building_num = 0;
+			makeBuildPanel(dbConn, buildPanel);
+		});
 		buildingCategoryPanel.add(armyButton);
 		buildPanel.add(buildingCategoryPanel, BorderLayout.PAGE_START);
 		// INFO
 		JPanel buildingInfoPanel = new JPanel(new BorderLayout());
-		JLabel buildingPicture = building.getPicture();
+		JLabel buildingPicture = selectedBuildingType.getPicture();
 		buildingInfoPanel.add(buildingPicture, BorderLayout.CENTER);
-		JTextArea buildingInfo = new JTextArea(building.getBuildingInfo());
+		JTextArea buildingInfo = new JTextArea(selectedBuildingType.getBuildingInfo());
 		buildingInfo.setEnabled(false);
 		buildingInfo.setBorder(new EmptyBorder(10, 10, 10, 10));
 		buildingInfo.setBackground(null);
@@ -313,14 +329,11 @@ public class GUI {
 		leftArrow.setFont(MEDIUM_FONT);
 		leftArrow.addActionListener((ActionEvent e) -> {
 			selected_building_num = Math.max(0, selected_building_num - 1);
-			switch (selected_building_category) {
-				case 0:
-					makeBuildPanel(buildPanel, DEFENSES.get(selected_building_num));
-			}
+			makeBuildPanel(dbConn, buildPanel);
 		});
 		arrowPanel.add(leftArrow, BorderLayout.LINE_START);
 		// building name label
-		JLabel buildingName = new JLabel(building.name);
+		JLabel buildingName = new JLabel(selectedBuildingType.name);
 		buildingName.setFont(LARGE_FONT);
 		arrowPanel.add(buildingName, BorderLayout.CENTER);
 		// right arrow
@@ -328,22 +341,12 @@ public class GUI {
 		rightArrow.setFocusPainted(false);
 		rightArrow.setFont(MEDIUM_FONT);
 		rightArrow.addActionListener((ActionEvent e) -> {
-			selected_building_num = Math.min(building_category_sizes[selected_building_category] - 1,
-					selected_building_num + 1);
-			switch (selected_building_category) {
-				case 0:
-					makeBuildPanel(buildPanel, DEFENSES.get(selected_building_num));
-			}
+			selected_building_num = Math.min(building_category_sizes[selected_building_category] - 1, selected_building_num + 1);
+			makeBuildPanel(dbConn, buildPanel);
 		});
 		arrowPanel.add(rightArrow, BorderLayout.LINE_END);
-		// build button
-		JButton buildButton = new JButton("Build");
-		buildButton.setFont(LARGE_FONT);
-		buildButton.addActionListener((ActionEvent e) -> {
-
-		});
-		// arrowPanel.add(buildButton, BorderLayout.PAGE_END);
 		buildPanel.add(arrowPanel, BorderLayout.PAGE_END);
+		// repaint the build panel with the new building
 		buildPanel.revalidate();
 		buildPanel.repaint();
 	}

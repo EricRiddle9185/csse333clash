@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import clash.domain.Building;
-import clash.domain.BuildingType;
+import clash.domain.*;
 
 public class DatabaseConn {
     private static final String URL = "jdbc:sqlserver://${dbServer};databaseName=${dbName};user=${user};password={${pass}};encrypt=false;";
@@ -65,6 +64,7 @@ public class DatabaseConn {
 
             ArrayList<BuildingType> buildingTypes = new ArrayList<BuildingType>();
             while (results.next()) {
+            	int id = results.getInt("id");
                 String name = results.getString("name");
                 int level = results.getInt("level");
                 int buildTime = results.getInt("buildTime");
@@ -73,13 +73,52 @@ public class DatabaseConn {
                 int goldCost = results.getInt("goldCost");
                 int elixirCost = results.getInt("elixirCost");
 
-                buildingTypes.add(new BuildingType(name, level, buildTime, maxHealth, size, goldCost, elixirCost));
+                buildingTypes.add(new BuildingType(id, name, level, buildTime, maxHealth, size, goldCost, elixirCost));
+            }
+            
+            stmt = this.conn.prepareCall("{? = call GetDefenses}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            results = stmt.executeQuery();
+            while (results.next()) {
+            	int id = results.getInt("id");
+            	int damage = results.getInt("damage");
+            	int attackRate = results.getInt("attackRate");
+            	String damageType = results.getString("damageType");
+            	String target = results.getString("attacksMovementType");
+            	
+            	// replace building type in buildingTypes with subclass
+            	for (int i = 0; i < buildingTypes.size(); i++) {
+					BuildingType old = buildingTypes.get(i);
+            		if (id == old.id) {
+            			buildingTypes.remove(i);
+            			buildingTypes.add(i, new Defense(old, damage, attackRate, damageType, target));
+            			break;
+            		}
+            	}
             }
 
             return buildingTypes;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public List<BuildingType> getBasicDefenses() {
+    	List<BuildingType> buildingTypes = this.getBuildingTypes();
+    	this.getBuildingTypes().removeIf(x -> !(x.level == 1 && x instanceof Defense));
+    	return buildingTypes;
+    }
+    
+    public List<BuildingType> getBasicResources() {
+    	List<BuildingType> buildingTypes = this.getBuildingTypes();
+    	this.getBuildingTypes().removeIf(x -> !(x.level == 1 && (x instanceof Collector || x instanceof Storage)));
+    	return buildingTypes;
+    }
+
+    public List<BuildingType> getBasicArmies() {
+    	List<BuildingType> buildingTypes = this.getBuildingTypes();
+    	this.getBuildingTypes().removeIf(x -> !(x.level == 1 && (x instanceof Camp || x.name.equals("Barracks"))));
+    	return buildingTypes;
     }
 
     public List<Building> getBuildings(int userId, List<BuildingType> buildingTypes) {
@@ -99,16 +138,30 @@ public class DatabaseConn {
                         .filter(kind -> kind.name.equals(name) && kind.level == level)
                         .findAny()
                         .get();
+                int id = results.getInt("id");
                 int x = results.getInt("posx");
                 int y = results.getInt("posy");
                 Date creationTime = results.getDate("CreationTime");
 
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(creationTime);
-                buildings.add(new Building(buildingType, calendar, x, y));
+                buildings.add(new Building(id, buildingType, calendar, x, y));
             }
 
             return buildings;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean deleteBuilding(int userId) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call DeleteBuilding(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, userId);
+            stmt.execute();
+
+            return true;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

@@ -1,6 +1,5 @@
 package clash.domain;
 
-import java.awt.BorderLayout;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -11,23 +10,26 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
+import clash.data.DatabaseConn;
 import clash.gui.GUI;
 
 public class Building {
+	public int id;
 	public BuildingType buildingType;
 	public Calendar creationTime;
 	public int posX;
 	public int posY;
 	// dont need to track player here, assumed correct
 
-	public Building(BuildingType buildingType, Calendar creationTime, int posX, int posY) {
+	public Building(int id, BuildingType buildingType, Calendar creationTime, int posX, int posY) {
+		this.id = id;
 		this.buildingType = buildingType;
 		this.creationTime = creationTime;
 		this.posX = posX;
 		this.posY = posY;
 	}
 	
-	public final JButton getButton() {
+	public final JButton getButton(DatabaseConn dbConn) {
 		// init
 		Image buildingImage;
 		JButton button = new JButton();
@@ -41,6 +43,7 @@ public class Building {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+
 		// popup window when clicked
 		button.addActionListener((ActionEvent e) -> {
 			// INIT
@@ -60,11 +63,23 @@ public class Building {
 			buildingInfo.setFont(GUI.SMALL_FONT);
 			buildingInfo.setDisabledTextColor(Color.BLACK);
 			infoFrame.add(buildingInfo, BorderLayout.LINE_END);
+			// bottom panel
+			JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
+			infoFrame.add(bottomPanel, BorderLayout.PAGE_END);
 			// upgrade button
 			JButton upgradeButton = new JButton("Upgrade");
 			upgradeButton.setFocusPainted(false);
 			upgradeButton.setFont(GUI.LARGE_FONT);
-			infoFrame.add(upgradeButton, BorderLayout.PAGE_END);
+			bottomPanel.add(upgradeButton);
+			// delete button
+			JButton deleteButton = new JButton("Delete");
+			deleteButton.setFocusPainted(false);
+			deleteButton.setFont(GUI.LARGE_FONT);
+			deleteButton.addActionListener((ActionEvent e2) -> {
+				dbConn.deleteBuilding(this.id);
+				infoFrame.dispose();
+			});
+			bottomPanel.add(deleteButton);
 			
 			// FINISH
 			infoFrame.setVisible(true);

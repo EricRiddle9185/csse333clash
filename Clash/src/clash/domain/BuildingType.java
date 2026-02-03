@@ -1,19 +1,15 @@
 package clash.domain;
 
-import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JLabel;
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 
 public class BuildingType {
+	public int id;
 	public String name;
 	public int level;
 	public int buildTime;
@@ -22,7 +18,8 @@ public class BuildingType {
 	public int goldCost;
 	public int elixirCost;
 	
-	public BuildingType(String name, int level, int buildTime, int maxHealth, int size, int goldCost, int elixirCost) {
+	public BuildingType(int id, String name, int level, int buildTime, int maxHealth, int size, int goldCost, int elixirCost) {
+		this.id = id;
 		this.name = name;
 		this.level = level;
 		this.buildTime = buildTime;

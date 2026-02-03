@@ -6,8 +6,16 @@ public class Defense extends BuildingType {
 	public String damageType;
 	public String target;
 	
-	public Defense(String name, int level, int buildTime, int maxHealth, int size, int goldCost, int elixirCost, int damage, int attackRate, String damageType, String target) {
-		super(name, level, buildTime, maxHealth, size, goldCost, elixirCost);
+	public Defense(int id, String name, int level, int buildTime, int maxHealth, int size, int goldCost, int elixirCost, int damage, int attackRate, String damageType, String target) {
+		super(id, name, level, buildTime, maxHealth, size, goldCost, elixirCost);
+		this.damage = damage;
+		this.attackRate = attackRate;
+		this.damageType = damageType;
+		this.target = target;
+	}
+	
+	public Defense(BuildingType bt, int damage, int attackRate, String damageType, String target) {
+		super(bt.id, bt.name, bt.level, bt.buildTime, bt.maxHealth, bt.size, bt.goldCost, bt.elixirCost);
 		this.damage = damage;
 		this.attackRate = attackRate;
 		this.damageType = damageType;

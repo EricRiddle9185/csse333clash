@@ -3,8 +3,8 @@ package clash.domain;
 public class Camp extends BuildingType {
 	public int troopsStored;
 
-	public Camp(String name, int level, int buildTime, int maxHealth, int size, int goldCost, int elixirCost, int troopsStored) {
-		super(name, level, buildTime, maxHealth, size, goldCost, elixirCost);
+	public Camp(int id, String name, int level, int buildTime, int maxHealth, int size, int goldCost, int elixirCost, int troopsStored) {
+		super(id, name, level, buildTime, maxHealth, size, goldCost, elixirCost);
 		this.troopsStored = troopsStored;
 	}
 	
