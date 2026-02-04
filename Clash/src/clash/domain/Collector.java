@@ -9,6 +9,12 @@ public class Collector extends BuildingType {
 		this.goldPerHour = goldPerHour;
 		this.elixirPerHour = elixirPerHour;
 	}
+
+	public Collector(BuildingType bt, int goldPerHour, int elixirPerHour) {
+		super(bt.id, bt.name, bt.level, bt.buildTime, bt.maxHealth, bt.size, bt.goldCost, bt.elixirCost);
+		this.goldPerHour = goldPerHour;
+		this.elixirPerHour = elixirPerHour;
+	}
 	
 	@Override
 	public String getBuildingInfo() {

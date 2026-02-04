@@ -52,6 +52,15 @@ public class GUI {
 		DatabaseConn dbConn = new DatabaseConn(SERVER, DB_NAME);
 		dbConn.connect(USERNAME, PASSWORD);
 		
+		List<BuildingType> bts = dbConn.getBuildingTypes();
+		for (BuildingType bt : bts) {
+			System.out.println(bt.name);
+			System.out.println(bt.getBuildingInfo());
+			System.out.println(bt instanceof Defense);
+			System.out.println(bt.level);
+			System.out.println();
+		}
+		
 		JFrame mainFrame = new JFrame("Clash of Clans");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setSize(1140, 680);
@@ -71,7 +80,7 @@ public class GUI {
 		JPanel basePanel = new JPanel();
 		basePanel.setPreferredSize(new Dimension(640, 640));
 		basePanel.setBackground(Color.GREEN.darker());
-		basePanel.setBorder(BorderFactory.createMatteBorder(15, 15, 15, 15, Color.GREEN.darker().darker()));
+		basePanel.setBorder(BorderFactory.createMatteBorder(10, 10, 10, 10, Color.GREEN.darker().darker()));
 		gbc = new GridBagConstraints();
 		gbc.gridx = 0;
 		gbc.gridy = 0;

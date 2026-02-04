@@ -57,10 +57,13 @@ public class DatabaseConn {
     }
 
     public List<BuildingType> getBuildingTypes() {
+    	// get all buildings
+    	CallableStatement stmt;
+    	ResultSet results;
         try {
-            CallableStatement stmt = this.conn.prepareCall("{? = call GetBuildingTypes}");
+            stmt = this.conn.prepareCall("{? = call GetBuildingTypes}");
             stmt.registerOutParameter(1, Types.INTEGER);
-            ResultSet results = stmt.executeQuery();
+            results = stmt.executeQuery();
 
             ArrayList<BuildingType> buildingTypes = new ArrayList<BuildingType>();
             while (results.next()) {
@@ -76,9 +79,10 @@ public class DatabaseConn {
                 buildingTypes.add(new BuildingType(id, name, level, buildTime, maxHealth, size, goldCost, elixirCost));
             }
             
-            stmt = this.conn.prepareCall("{? = call GetDefenses}");
-            stmt.registerOutParameter(1, Types.INTEGER);
-            results = stmt.executeQuery();
+            // replace defenses with defense objects
+			stmt = this.conn.prepareCall("{? = call GetDefenses}");
+			stmt.registerOutParameter(1, Types.INTEGER);
+			results = stmt.executeQuery();
             while (results.next()) {
             	int id = results.getInt("id");
             	int damage = results.getInt("damage");
@@ -96,6 +100,46 @@ public class DatabaseConn {
             		}
             	}
             }
+            
+            // replace collectors with collector objects
+			stmt = this.conn.prepareCall("{? = call GetCollectors}");
+			stmt.registerOutParameter(1, Types.INTEGER);
+			results = stmt.executeQuery();
+            while (results.next()) {
+            	int id = results.getInt("id");
+            	int goldPerHour = results.getInt("collectsGold");
+            	int elixirPerHour = results.getInt("collectsElixir");
+            	
+            	// replace building type in buildingTypes with subclass
+            	for (int i = 0; i < buildingTypes.size(); i++) {
+					BuildingType old = buildingTypes.get(i);
+            		if (id == old.id) {
+            			buildingTypes.remove(i);
+            			buildingTypes.add(i, new Collector(old, goldPerHour, elixirPerHour));
+            			break;
+            		}
+            	}
+            }
+            
+            // replace storages with storage objects
+			stmt = this.conn.prepareCall("{? = call GetStorages}");
+			stmt.registerOutParameter(1, Types.INTEGER);
+			results = stmt.executeQuery();
+            while (results.next()) {
+            	int id = results.getInt("id");
+            	int goldStored = results.getInt("storesGold");
+            	int elixirStored = results.getInt("storesElixir");
+            	
+            	// replace building type in buildingTypes with subclass
+            	for (int i = 0; i < buildingTypes.size(); i++) {
+					BuildingType old = buildingTypes.get(i);
+            		if (id == old.id) {
+            			buildingTypes.remove(i);
+            			buildingTypes.add(i, new Storage(old, goldStored, elixirStored));
+            			break;
+            		}
+            	}
+            }
 
             return buildingTypes;
         } catch (SQLException e) {
@@ -105,19 +149,19 @@ public class DatabaseConn {
     
     public List<BuildingType> getBasicDefenses() {
     	List<BuildingType> buildingTypes = this.getBuildingTypes();
-    	this.getBuildingTypes().removeIf(x -> !(x.level == 1 && x instanceof Defense));
+    	buildingTypes.removeIf(x -> !(x.level == 1 && x instanceof Defense));
     	return buildingTypes;
     }
     
     public List<BuildingType> getBasicResources() {
     	List<BuildingType> buildingTypes = this.getBuildingTypes();
-    	this.getBuildingTypes().removeIf(x -> !(x.level == 1 && (x instanceof Collector || x instanceof Storage)));
+    	buildingTypes.removeIf(x -> !(x.level == 1 && (x instanceof Collector || x instanceof Storage)));
     	return buildingTypes;
     }
 
     public List<BuildingType> getBasicArmies() {
     	List<BuildingType> buildingTypes = this.getBuildingTypes();
-    	this.getBuildingTypes().removeIf(x -> !(x.level == 1 && (x instanceof Camp || x.name.equals("Barracks"))));
+    	buildingTypes.removeIf(x -> !(x.level == 1 && (x instanceof Camp || x.name.equals("Barracks"))));
     	return buildingTypes;
     }
 

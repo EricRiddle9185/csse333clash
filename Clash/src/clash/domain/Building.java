@@ -33,12 +33,13 @@ public class Building {
 		// init
 		Image buildingImage;
 		JButton button = new JButton();
+//		button.setPreferredSize(new Dimension(50 * this.buildingType.size, 50 * this.buildingType.size));
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setContentAreaFilled(false);
 		// image
 		try {
 			buildingImage = ImageIO.read(new File("src\\clash\\resources\\" + this.buildingType.name + this.buildingType.level + ".png"))
-					.getScaledInstance(32 * this.buildingType.size, 32 * this.buildingType.size, 100);
+					.getScaledInstance(34 * this.buildingType.size, 34 * this.buildingType.size, 100);
 			button.setIcon(new ImageIcon(buildingImage));
 		} catch (IOException e1) {
 			e1.printStackTrace();

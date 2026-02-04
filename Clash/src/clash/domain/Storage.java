@@ -10,6 +10,12 @@ public class Storage extends BuildingType {
 		this.elixirStored = elixirStored;
 	}
 	
+	public Storage(BuildingType bt, int goldStored, int elixirStored) {
+		super(bt.id, bt.name, bt.level, bt.buildTime, bt.maxHealth, bt.size, bt.goldCost, bt.elixirCost);
+		this.goldStored = goldStored;
+		this.elixirStored = elixirStored;
+	}
+	
 	@Override
 	public String getBuildingInfo() {
 		String cost;
