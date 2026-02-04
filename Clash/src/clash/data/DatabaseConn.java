@@ -141,6 +141,25 @@ public class DatabaseConn {
             	}
             }
 
+            // replace camps with camp objects
+			stmt = this.conn.prepareCall("{? = call GetCamps}");
+			stmt.registerOutParameter(1, Types.INTEGER);
+			results = stmt.executeQuery();
+            while (results.next()) {
+            	int id = results.getInt("id");
+            	int troopsStored = results.getInt("capacity");
+            	
+            	// replace building type in buildingTypes with subclass
+            	for (int i = 0; i < buildingTypes.size(); i++) {
+					BuildingType old = buildingTypes.get(i);
+            		if (id == old.id) {
+            			buildingTypes.remove(i);
+            			buildingTypes.add(i, new Camp(old, troopsStored));
+            			break;
+            		}
+            	}
+            }
+
             return buildingTypes;
         } catch (SQLException e) {
             throw new RuntimeException(e);

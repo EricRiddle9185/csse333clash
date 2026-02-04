@@ -80,7 +80,7 @@ public class GUI {
 		JPanel basePanel = new JPanel();
 		basePanel.setPreferredSize(new Dimension(640, 640));
 		basePanel.setBackground(Color.GREEN.darker());
-		basePanel.setBorder(BorderFactory.createMatteBorder(10, 10, 10, 10, Color.GREEN.darker().darker()));
+		basePanel.setBorder(BorderFactory.createMatteBorder(15, 15, 15, 15, Color.GREEN.darker().darker()));
 		gbc = new GridBagConstraints();
 		gbc.gridx = 0;
 		gbc.gridy = 0;
