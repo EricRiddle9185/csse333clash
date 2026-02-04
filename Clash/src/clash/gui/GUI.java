@@ -52,13 +52,11 @@ public class GUI {
 		DatabaseConn dbConn = new DatabaseConn(SERVER, DB_NAME);
 		dbConn.connect(USERNAME, PASSWORD);
 		
-		List<BuildingType> bts = dbConn.getBuildingTypes();
-		for (BuildingType bt : bts) {
-			System.out.println(bt.name);
-			System.out.println(bt.getBuildingInfo());
-			System.out.println(bt instanceof Defense);
-			System.out.println(bt.level);
-			System.out.println();
+		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes());
+		for (Building b: buildings) {
+			System.out.println(b.buildingType.name);
+			System.out.println(b.buildingType.level);
+			System.out.println(b.buildingType.getBuildingInfo());
 		}
 		
 		JFrame mainFrame = new JFrame("Clash of Clans");

@@ -244,6 +244,18 @@ public class DatabaseConn {
 		return true;
     }
     
+    public boolean upgradeBuilding(int buildingID) throws SQLException {
+		CallableStatement stmt = this.conn.prepareCall("{? = call Upgrade(?, ?)}");
+		stmt.registerOutParameter(1, Types.INTEGER);
+		stmt.setInt(2, 1); // TODO: add other players lol
+		stmt.setInt(3, buildingID);
+		stmt.execute();
+//        ResultSet results = stmt.executeQuery();
+		// TODO: do smth with the results?
+
+		return true;
+    }
+    
     public int getElixir(int playerID) {
 		try {
 			CallableStatement stmt = this.conn.prepareCall("{? = call GetElixir(?)}");

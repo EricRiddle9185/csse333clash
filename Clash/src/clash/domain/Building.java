@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Calendar;
 
 import javax.imageio.ImageIO;
@@ -29,6 +30,54 @@ public class Building {
 		this.posY = posY;
 	}
 	
+	private void makeInfoPanel(DatabaseConn dbConn, JFrame infoFrame, JPanel infoPanel, JPanel basePanel) {
+		infoPanel.removeAll();
+
+		// picture
+		JLabel buildingPicture = this.buildingType.getPicture();
+		infoPanel.add(buildingPicture, BorderLayout.CENTER);
+		// info
+		JTextArea buildingInfo = new JTextArea(this.buildingType.getBuildingInfo());
+		buildingInfo.setEnabled(false);
+		buildingInfo.setBorder(new EmptyBorder(10, 10, 10, 10));
+		buildingInfo.setBackground(null);
+		buildingInfo.setFont(GUI.SMALL_FONT);
+		buildingInfo.setDisabledTextColor(Color.BLACK);
+		infoPanel.add(buildingInfo, BorderLayout.LINE_END);
+		// bottom panel
+		JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
+		infoPanel.add(bottomPanel, BorderLayout.PAGE_END);
+		// upgrade button
+		JButton upgradeButton = new JButton("Upgrade");
+		upgradeButton.setFocusPainted(false);
+		upgradeButton.setFont(GUI.LARGE_FONT);
+		upgradeButton.addActionListener((ActionEvent e1) -> {
+			try {
+				dbConn.upgradeBuilding(this.id);
+			} catch (SQLException e2) {
+				JOptionPane.showMessageDialog(new JFrame(), "Can't upgrade building: " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+			this.makeInfoPanel(dbConn, infoFrame, infoPanel, basePanel);
+			infoFrame.revalidate();
+			infoFrame.repaint();
+			GUI.makeBasePanel(dbConn, basePanel);
+		});
+		bottomPanel.add(upgradeButton);
+		// delete button
+		JButton deleteButton = new JButton("Delete");
+		deleteButton.setFocusPainted(false);
+		deleteButton.setFont(GUI.LARGE_FONT);
+		deleteButton.addActionListener((ActionEvent e2) -> {
+			dbConn.deleteBuilding(this.id);
+			infoFrame.dispose();
+			GUI.makeBasePanel(dbConn, basePanel);
+		});
+		bottomPanel.add(deleteButton);
+		
+		infoPanel.revalidate();
+		infoPanel.repaint();
+	}
+	
 	public final JButton makeButton(DatabaseConn dbConn, JPanel basePanel) {
 		// init
 		Image buildingImage;
@@ -39,7 +88,7 @@ public class Building {
 		// image
 		try {
 			buildingImage = ImageIO.read(new File("src\\clash\\resources\\" + this.buildingType.name + this.buildingType.level + ".png"))
-					.getScaledInstance(34 * this.buildingType.size, 34 * this.buildingType.size, 100);
+					.getScaledInstance(32 * this.buildingType.size, 32 * this.buildingType.size, 100);
 			button.setIcon(new ImageIcon(buildingImage));
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -52,39 +101,10 @@ public class Building {
 			infoFrame.setLayout(new BorderLayout());
 //			infoFrame.setResizable(false);
 			infoFrame.setSize(500, 350);
-			
-			// picture
-			JLabel buildingPicture = this.buildingType.getPicture();
-			infoFrame.add(buildingPicture, BorderLayout.CENTER);
-			// info
-			JTextArea buildingInfo = new JTextArea(this.buildingType.getBuildingInfo());
-			buildingInfo.setEnabled(false);
-			buildingInfo.setBorder(new EmptyBorder(10, 10, 10, 10));
-			buildingInfo.setBackground(null);
-			buildingInfo.setFont(GUI.SMALL_FONT);
-			buildingInfo.setDisabledTextColor(Color.BLACK);
-			infoFrame.add(buildingInfo, BorderLayout.LINE_END);
-			// bottom panel
-			JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
-			infoFrame.add(bottomPanel, BorderLayout.PAGE_END);
-			// upgrade button
-			JButton upgradeButton = new JButton("Upgrade");
-			upgradeButton.setFocusPainted(false);
-			upgradeButton.setFont(GUI.LARGE_FONT);
-			upgradeButton.addActionListener((ActionEvent e1) -> {
-				GUI.makeBasePanel(dbConn, basePanel);
-			});
-			bottomPanel.add(upgradeButton);
-			// delete button
-			JButton deleteButton = new JButton("Delete");
-			deleteButton.setFocusPainted(false);
-			deleteButton.setFont(GUI.LARGE_FONT);
-			deleteButton.addActionListener((ActionEvent e2) -> {
-				dbConn.deleteBuilding(this.id);
-				infoFrame.dispose();
-				GUI.makeBasePanel(dbConn, basePanel);
-			});
-			bottomPanel.add(deleteButton);
+
+			JPanel infoPanel = new JPanel(new BorderLayout());
+			this.makeInfoPanel(dbConn, infoFrame, infoPanel, basePanel);
+			infoFrame.add(infoPanel);
 			
 			// FINISH
 			infoFrame.setVisible(true);
