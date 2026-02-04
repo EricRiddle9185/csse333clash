@@ -54,12 +54,13 @@ public class Building {
 		upgradeButton.addActionListener((ActionEvent e1) -> {
 			try {
 				dbConn.upgradeBuilding(this.id);
+				// TODO: update this.bt do reflect update
 			} catch (SQLException e2) {
 				JOptionPane.showMessageDialog(new JFrame(), "Can't upgrade building: " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
-			this.makeInfoPanel(dbConn, infoFrame, infoPanel, basePanel);
-			infoFrame.revalidate();
-			infoFrame.repaint();
+			makeInfoPanel(dbConn, infoFrame, infoPanel, basePanel);
+//			infoFrame.revalidate();
+//			infoFrame.repaint();
 			GUI.makeBasePanel(dbConn, basePanel);
 		});
 		bottomPanel.add(upgradeButton);
