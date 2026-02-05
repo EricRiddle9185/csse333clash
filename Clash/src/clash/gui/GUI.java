@@ -52,12 +52,12 @@ public class GUI {
 		DatabaseConn dbConn = new DatabaseConn(SERVER, DB_NAME);
 		dbConn.connect(USERNAME, PASSWORD);
 		
-		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes());
-		for (Building b: buildings) {
-			System.out.println(b.buildingType.name);
-			System.out.println(b.buildingType.level);
-			System.out.println(b.buildingType.getBuildingInfo());
-		}
+//		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes());
+//		for (Building b: buildings) {
+//			System.out.println(b.buildingType.name);
+//			System.out.println(b.buildingType.level);
+//			System.out.println(b.buildingType.getBuildingInfo());
+//		}
 		
 		JFrame mainFrame = new JFrame("Clash of Clans");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,12 +83,14 @@ public class GUI {
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 1;
-		makeBasePanel(dbConn, basePanel);
-		mainPanel.add(basePanel, gbc);
 		
 		// USER PANEL
 		JPanel userPanel = new JPanel();
 		makeUserPanel(dbConn, userPanel);
+		
+		// BASE PANEL cont'd
+		makeBasePanel(dbConn, basePanel, userPanel);
+		mainPanel.add(basePanel, gbc);
 
 		// SIDE PANEL
 		JTabbedPane sidePanel = new JTabbedPane();
@@ -134,7 +136,7 @@ public class GUI {
 		return null;
 	}
 
-	public static void makeBasePanel(DatabaseConn dbConn, JPanel basePanel) {
+	public static void makeBasePanel(DatabaseConn dbConn, JPanel basePanel, JPanel userPanel) {
 		basePanel.removeAll();
 		basePanel.setLayout(new GridBagLayout());
 		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes()); // TODO: add other players
@@ -156,7 +158,7 @@ public class GUI {
 				}
 				// place a building
 				if (building != null) {
-					JButton button = building.makeButton(dbConn, basePanel);
+					JButton button = building.makeButton(dbConn, basePanel, userPanel);
 					button.setFocusPainted(false);
 					GridBagConstraints gbc = new GridBagConstraints();
 					gbc.fill = GridBagConstraints.BOTH;
@@ -195,7 +197,7 @@ public class GUI {
 									} catch (SQLException e1) {
 										JOptionPane.showMessageDialog(new JFrame(), "Can't place building: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 									}
-									makeBasePanel(dbConn, basePanel);
+									makeBasePanel(dbConn, basePanel, userPanel);
 //									makeMainPanel(dbConn, mainPanel); // refresh the screen
 								}
 							}
@@ -231,7 +233,7 @@ public class GUI {
 						((bTop >= top && bTop <= bottom) || (bBottom >= top && bBottom <= bottom)));
 	}
 
-	private static void makeUserPanel(DatabaseConn dbConn, JPanel userPanel) {
+	public static void makeUserPanel(DatabaseConn dbConn, JPanel userPanel) {
 		userPanel.removeAll();
 		userPanel.setLayout(new BoxLayout(userPanel, BoxLayout.Y_AXIS));
 		// USERNAME
