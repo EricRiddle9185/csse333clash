@@ -155,6 +155,12 @@ public class GUI {
 		sidePanel.addChangeListener((ChangeEvent e) -> {
 			build_mode = sidePanel.getSelectedIndex() == 1;
 			makeUserPanel(dbConn, auth, userPanel); // refresh user panel, updates gold/elixir bars
+
+			if (sidePanel.getSelectedIndex() == 3) {
+				basePanel.removeAll();
+			} else {
+				makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
+			}
 		});
 		gbc = new GridBagConstraints();
 		gbc.gridx = 1;
@@ -173,6 +179,11 @@ public class GUI {
 		// TRAIN PANEL
 		JPanel trainPanel = new JPanel();
 		sidePanel.addTab("Train", trainPanel);
+
+		// PLAYERS PANEL
+		JPanel playersPanel = new JPanel();
+		makePlayersPanel(dbConn, auth, playersPanel, basePanel);
+		sidePanel.addTab("Players", playersPanel);
 
 		// REPAINT
 		mainPanel.revalidate();
@@ -248,8 +259,10 @@ public class GUI {
 								if (valid1) {
 									// buildings.add(newBuilding);
 									try {
-										dbConn.placeBuilding(auth.userId(), newBuildingType.id, posX, posY); // TODO: add other
-																								// buildings
+										dbConn.placeBuilding(auth.userId(), newBuildingType.id, posX, posY); // TODO:
+																												// add
+																												// other
+										// buildings
 									} catch (SQLException e1) {
 										JOptionPane.showMessageDialog(new JFrame(),
 												"Can't place building: " + e1.getMessage(), "Error",
@@ -415,5 +428,24 @@ public class GUI {
 		// repaint the build panel with the new building
 		buildPanel.revalidate();
 		buildPanel.repaint();
+	}
+
+	private static void makePlayersPanel(DatabaseConn dbConn, Auth auth, JPanel playersPanel, JPanel basePanel) {
+		playersPanel.removeAll();
+
+		JPanel listPanel = new JPanel(new GridLayout(0, 1));
+		for (String player : dbConn.getPlayers()) {
+			if (player.equals(auth.user()))
+				continue;
+
+			JButton entry = new JButton(player);
+			entry.addActionListener(e -> makeBasePanel(dbConn, auth, dbConn.getUserId(player), basePanel, null));
+			listPanel.add(entry);
+		}
+		JScrollPane scrollPane = new JScrollPane(listPanel);
+		playersPanel.add(scrollPane);
+
+		playersPanel.revalidate();
+		playersPanel.repaint();
 	}
 }

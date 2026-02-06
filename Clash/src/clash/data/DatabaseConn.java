@@ -286,4 +286,42 @@ public class DatabaseConn {
 		}
 		return 0;
     }
+
+    public List<String> getPlayers() {
+		try {
+			CallableStatement stmt = this.conn.prepareCall("{? = call GetPlayers()}");
+			stmt.registerOutParameter(1, Types.INTEGER);
+
+			ResultSet results = stmt.executeQuery();
+            ArrayList<String> players = new ArrayList<String>();
+            while (results.next()) {
+                players.add(results.getString("UName"));
+            }
+
+            return players;
+		} catch (SQLException e) {
+			e.printStackTrace();
+
+            return new ArrayList<String>();
+		}
+    }
+
+    public int getUserId(String username) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetPlayerId(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setString(2, username);
+
+            ResultSet results = stmt.executeQuery();
+            if (results.next()) {
+                return results.getInt("ID");
+            } else {
+                return 0;
+            }
+        } catch (SQLException e) {
+			e.printStackTrace();
+
+            return 0;
+        }
+    }
 }
