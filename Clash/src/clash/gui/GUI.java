@@ -250,18 +250,22 @@ public class GUI {
 							if (newBuildingType != null) {
 								boolean valid1 = posX + newBuildingType.size <= BASE_WIDTH
 										&& posY + newBuildingType.size <= BASE_HEIGHT;
-								for (Building b : buildings) {
-									if (isOverlapping(b, posX, posY, newBuildingType.size)) {
-										valid1 = false;
-										break;
+								if (!valid1) {
+									JOptionPane.showMessageDialog(new JFrame(), "Can't place building: This placement extends byound the edge of the grid", "Error", JOptionPane.ERROR_MESSAGE);
+								}
+								else {
+									for (Building b : buildings) {
+										if (isOverlapping(b, posX, posY, newBuildingType.size)) {
+											valid1 = false;
+											JOptionPane.showMessageDialog(new JFrame(), "Can't place building: This placement overlaps with another building", "Error", JOptionPane.ERROR_MESSAGE);
+											break;
+										}
 									}
 								}
 								if (valid1) {
 									// buildings.add(newBuilding);
 									try {
-										dbConn.placeBuilding(auth.userId(), newBuildingType.id, posX, posY); // TODO:
-																												// add
-																												// other
+										dbConn.placeBuilding(auth.userId(), newBuildingType.id, posX, posY);
 										// buildings
 									} catch (SQLException e1) {
 										JOptionPane.showMessageDialog(new JFrame(),
