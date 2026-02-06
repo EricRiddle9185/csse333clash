@@ -1,5 +1,6 @@
 package clash.data;
 
+import java.security.SecureRandom;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
@@ -8,14 +9,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 import clash.domain.*;
 
 public class DatabaseConn {
     private static final String URL = "jdbc:sqlserver://${dbServer};databaseName=${dbName};user=${user};password={${pass}};encrypt=false;";
-
     private Connection conn = null;
 
     private String databaseName;
@@ -230,10 +232,10 @@ public class DatabaseConn {
         }
     }
     
-    public boolean placeBuilding(int buildingTypeID, int posX, int posY) throws SQLException {
+    public boolean placeBuilding(int userId, int buildingTypeID, int posX, int posY) throws SQLException {
 		CallableStatement stmt = this.conn.prepareCall("{? = call PlaceBuilding(?, ?, ?, ?)}");
 		stmt.registerOutParameter(1, Types.INTEGER);
-		stmt.setInt(2, 1); // TODO: add other players lol
+		stmt.setInt(2, userId);
 		stmt.setInt(3, posX);
 		stmt.setInt(4, posY);
 		stmt.setInt(5, buildingTypeID);
@@ -244,10 +246,10 @@ public class DatabaseConn {
 		return true;
     }
     
-    public boolean upgradeBuilding(int buildingID) throws SQLException {
+    public boolean upgradeBuilding(int userId, int buildingID) throws SQLException {
 		CallableStatement stmt = this.conn.prepareCall("{? = call Upgrade(?, ?)}");
 		stmt.registerOutParameter(1, Types.INTEGER);
-		stmt.setInt(2, 1); // TODO: add other players lol
+		stmt.setInt(2, userId);
 		stmt.setInt(3, buildingID);
 		stmt.execute();
 //        ResultSet results = stmt.executeQuery();

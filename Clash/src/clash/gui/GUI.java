@@ -2,6 +2,9 @@ package clash.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -9,6 +12,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 
+import clash.data.Auth;
 import clash.data.DatabaseConn;
 import clash.domain.*;
 
@@ -30,17 +34,23 @@ public class GUI {
 	private static boolean build_mode = false;
 
 	// test data
-//	private static final BuildingType CANNON = new Defense(1, "Cannon", 1, 10, 100, 1, 100, 0, 10, 10, "Single", "Ground");
-//	private static final BuildingType ARCHER_TOWER = new Defense(6, "Archer Tower", 1, 60, 200, 2, 250, 0, 5, 20, "Single", "Any");
-//	private static final BuildingType WIZARD_TOWER = new Defense(7, "Wizard Tower", 1, 300, 300, 3, 500, 0, 5, 10, "Multi", "Any");
-//	private static final ArrayList<BuildingType> DEFENSES = new ArrayList<>(
-//			Arrays.asList(CANNON, ARCHER_TOWER, WIZARD_TOWER));
+	// private static final BuildingType CANNON = new Defense(1, "Cannon", 1, 10,
+	// 100, 1, 100, 0, 10, 10, "Single", "Ground");
+	// private static final BuildingType ARCHER_TOWER = new Defense(6, "Archer
+	// Tower", 1, 60, 200, 2, 250, 0, 5, 20, "Single", "Any");
+	// private static final BuildingType WIZARD_TOWER = new Defense(7, "Wizard
+	// Tower", 1, 300, 300, 3, 500, 0, 5, 10, "Multi", "Any");
+	// private static final ArrayList<BuildingType> DEFENSES = new ArrayList<>(
+	// Arrays.asList(CANNON, ARCHER_TOWER, WIZARD_TOWER));
 
 	// more test data
-//	private static final Building BUILDING_A = new Building(CANNON, null, 2, 3);
-//	private static final Building BUILDING_B = new Building(ARCHER_TOWER, null, 8, 2);
-//	private static final Building BUILDING_C = new Building(WIZARD_TOWER, null, 5, 7);
-//	private static final ArrayList<Building> PLAYER_BUILDINGS = new ArrayList<>();
+	// private static final Building BUILDING_A = new Building(CANNON, null, 2, 3);
+	// private static final Building BUILDING_B = new Building(ARCHER_TOWER, null,
+	// 8, 2);
+	// private static final Building BUILDING_C = new Building(WIZARD_TOWER, null,
+	// 5, 7);
+	// private static final ArrayList<Building> PLAYER_BUILDINGS = new
+	// ArrayList<>();
 
 	// DB connection info
 	private static final String SERVER = "golem.csse.rose-hulman.edu";
@@ -51,24 +61,69 @@ public class GUI {
 	public static void main(String[] args) {
 		DatabaseConn dbConn = new DatabaseConn(SERVER, DB_NAME);
 		dbConn.connect(USERNAME, PASSWORD);
-		
-//		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes());
-//		for (Building b: buildings) {
-//			System.out.println(b.buildingType.name);
-//			System.out.println(b.buildingType.level);
-//			System.out.println(b.buildingType.getBuildingInfo());
-//		}
-		
+		Auth auth = new Auth(dbConn);
+
 		JFrame mainFrame = new JFrame("Clash of Clans");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setSize(1140, 680);
+
+		handleLogin(dbConn, auth, mainFrame);
+
 		JPanel mainPanel = new JPanel();
-		makeMainPanel(dbConn, mainPanel);
+		makeMainPanel(dbConn, auth, mainPanel);
 		mainFrame.add(mainPanel);
 		mainFrame.setVisible(true);
 	}
-	
-	private static void makeMainPanel(DatabaseConn dbConn, JPanel mainPanel) {
+
+	private static void handleLogin(DatabaseConn dbConn, Auth auth, JFrame frame) {
+		JDialog dialog = new JDialog(frame, "Login", true);
+		dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		dialog.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent e) {
+				System.exit(0);
+			}
+		});
+		dialog.setSize(512, 256);
+
+		// panel.setLayout(new GridBagLayout());
+		// panel.setPreferredSize(new Dimension(640, 640));
+		dialog.setLayout(new GridLayout(3, 2));
+		// panel.setBorder(BorderFactory.createMatteBorder(15, 15, 15, 15,
+		// Color.GREEN.darker().darker()));
+
+		JLabel usernameLbl = new JLabel("Username:");
+		dialog.add(usernameLbl);
+		JTextField usernameTxt = new JTextField(20);
+		dialog.add(usernameTxt);
+		JLabel passwordLbl = new JLabel("Password:");
+		dialog.add(passwordLbl);
+		JPasswordField passwordTxt = new JPasswordField(20);
+		dialog.add(passwordTxt);
+		JButton loginButton = new JButton("Login");
+		loginButton.addActionListener(e -> {
+			if (auth.login(usernameTxt.getText(), passwordTxt.getText())) {
+				dialog.setVisible(false);
+			} else {
+				JOptionPane.showMessageDialog(null, "Login failed");
+			}
+		});
+		dialog.add(loginButton);
+		JButton registerButton = new JButton("Register");
+		registerButton.addActionListener(e -> {
+			if (auth.register(usernameTxt.getText(), passwordTxt.getText())) {
+				dialog.setVisible(false);
+			} else {
+				JOptionPane.showMessageDialog(null, "Register failed");
+			}
+		});
+		dialog.add(registerButton);
+
+		dialog.setLocationRelativeTo(frame);
+		dialog.setVisible(true);
+	}
+
+	private static void makeMainPanel(DatabaseConn dbConn, Auth auth, JPanel mainPanel) {
 		mainPanel.removeAll();
 		mainPanel.setLayout(new GridBagLayout());
 		// mainFrame.setResizable(false);
@@ -83,13 +138,13 @@ public class GUI {
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 1;
-		
+
 		// USER PANEL
 		JPanel userPanel = new JPanel();
-		makeUserPanel(dbConn, userPanel);
-		
+		makeUserPanel(dbConn, auth, userPanel);
+
 		// BASE PANEL cont'd
-		makeBasePanel(dbConn, basePanel, userPanel);
+		makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
 		mainPanel.add(basePanel, gbc);
 
 		// SIDE PANEL
@@ -99,7 +154,7 @@ public class GUI {
 		sidePanel.setFont(MEDIUM_FONT);
 		sidePanel.addChangeListener((ChangeEvent e) -> {
 			build_mode = sidePanel.getSelectedIndex() == 1;
-			makeUserPanel(dbConn, userPanel); // refresh user panel, updates gold/elixir bars
+			makeUserPanel(dbConn, auth, userPanel); // refresh user panel, updates gold/elixir bars
 		});
 		gbc = new GridBagConstraints();
 		gbc.gridx = 1;
@@ -123,7 +178,7 @@ public class GUI {
 		mainPanel.revalidate();
 		mainPanel.repaint();
 	}
-	
+
 	private static BuildingType getSelectedBuildingType(DatabaseConn dbConn) {
 		switch (selected_building_category) {
 			case 0:
@@ -136,10 +191,10 @@ public class GUI {
 		return null;
 	}
 
-	public static void makeBasePanel(DatabaseConn dbConn, JPanel basePanel, JPanel userPanel) {
+	public static void makeBasePanel(DatabaseConn dbConn, Auth auth, int userId, JPanel basePanel, JPanel userPanel) {
 		basePanel.removeAll();
 		basePanel.setLayout(new GridBagLayout());
-		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes()); // TODO: add other players
+		List<Building> buildings = dbConn.getBuildings(userId, dbConn.getBuildingTypes());
 		for (int i = 0; i < BASE_HEIGHT; i++) {
 			for (int j = 0; j < BASE_WIDTH; j++) {
 				boolean valid = true;
@@ -158,7 +213,7 @@ public class GUI {
 				}
 				// place a building
 				if (building != null) {
-					JButton button = building.makeButton(dbConn, basePanel, userPanel);
+					JButton button = building.makeButton(dbConn, auth, userId, basePanel, userPanel);
 					button.setFocusPainted(false);
 					GridBagConstraints gbc = new GridBagConstraints();
 					gbc.fill = GridBagConstraints.BOTH;
@@ -180,7 +235,7 @@ public class GUI {
 					button.addActionListener((ActionEvent e) -> {
 						if (build_mode) {
 							BuildingType newBuildingType = getSelectedBuildingType(dbConn);
-//							Building newBuilding = new Building(newBuildingType, null, posX, posY);
+							// Building newBuilding = new Building(newBuildingType, null, posX, posY);
 							if (newBuildingType != null) {
 								boolean valid1 = posX + newBuildingType.size <= BASE_WIDTH
 										&& posY + newBuildingType.size <= BASE_HEIGHT;
@@ -191,14 +246,17 @@ public class GUI {
 									}
 								}
 								if (valid1) {
-//									buildings.add(newBuilding);
+									// buildings.add(newBuilding);
 									try {
-										dbConn.placeBuilding(newBuildingType.id, posX, posY); // TODO: add other buildings
+										dbConn.placeBuilding(auth.userId(), newBuildingType.id, posX, posY); // TODO: add other
+																								// buildings
 									} catch (SQLException e1) {
-										JOptionPane.showMessageDialog(new JFrame(), "Can't place building: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+										JOptionPane.showMessageDialog(new JFrame(),
+												"Can't place building: " + e1.getMessage(), "Error",
+												JOptionPane.ERROR_MESSAGE);
 									}
-									makeBasePanel(dbConn, basePanel, userPanel);
-//									makeMainPanel(dbConn, mainPanel); // refresh the screen
+									makeBasePanel(dbConn, auth, userId, basePanel, userPanel);
+									// makeMainPanel(dbConn, mainPanel); // refresh the screen
 								}
 							}
 						}
@@ -233,16 +291,16 @@ public class GUI {
 						((bTop >= top && bTop <= bottom) || (bBottom >= top && bBottom <= bottom)));
 	}
 
-	public static void makeUserPanel(DatabaseConn dbConn, JPanel userPanel) {
+	public static void makeUserPanel(DatabaseConn dbConn, Auth auth, JPanel userPanel) {
 		userPanel.removeAll();
 		userPanel.setLayout(new BoxLayout(userPanel, BoxLayout.Y_AXIS));
 		// USERNAME
-		JLabel username = new JLabel("Hello, riddleet");
+		JLabel username = new JLabel("Hello, " + auth.user());
 		username.setFont(LARGE_FONT);
 		username.setAlignmentX(Component.CENTER_ALIGNMENT);
 		userPanel.add(username);
 		// GOLD BAR
-		int gold = dbConn.getGold(1); // TODO: add more players
+		int gold = dbConn.getGold(auth.userId());
 		int maxGold = 10000;
 		JPanel goldPanel = new JPanel();
 		goldPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -256,7 +314,7 @@ public class GUI {
 		goldPanel.add(goldBar);
 		userPanel.add(goldPanel);
 		// ELIXIR BAR
-		int elixir = dbConn.getElixir(1);
+		int elixir = dbConn.getElixir(auth.userId());
 		int maxElixir = 10000;
 		JPanel elixirPanel = new JPanel();
 		elixirPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -348,7 +406,8 @@ public class GUI {
 		rightArrow.setFocusPainted(false);
 		rightArrow.setFont(MEDIUM_FONT);
 		rightArrow.addActionListener((ActionEvent e) -> {
-			selected_building_num = Math.min(building_category_sizes[selected_building_category] - 1, selected_building_num + 1);
+			selected_building_num = Math.min(building_category_sizes[selected_building_category] - 1,
+					selected_building_num + 1);
 			makeBuildPanel(dbConn, buildPanel);
 		});
 		arrowPanel.add(rightArrow, BorderLayout.LINE_END);

@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
+import clash.data.Auth;
 import clash.data.DatabaseConn;
 import clash.gui.GUI;
 
@@ -30,12 +31,13 @@ public class Building {
 		this.posX = posX;
 		this.posY = posY;
 	}
-	
-	private void makeInfoPanel(DatabaseConn dbConn, JFrame infoFrame, JPanel infoPanel, JPanel basePanel, JPanel userPanel) {
+
+	private void makeInfoPanel(DatabaseConn dbConn, Auth auth, int userId, JFrame infoFrame, JPanel infoPanel,
+			JPanel basePanel, JPanel userPanel) {
 		infoPanel.removeAll();
 
 		// make sure to get the correct building type in case this has been upgraded
-		List<Building> buildings = dbConn.getBuildings(1, dbConn.getBuildingTypes()); // TODO: add other players
+		List<Building> buildings = dbConn.getBuildings(userId, dbConn.getBuildingTypes());
 		BuildingType buildingType = this.buildingType;
 		for (Building b : buildings) {
 			if (b.id == this.id) {
@@ -59,46 +61,51 @@ public class Building {
 		JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
 		infoPanel.add(bottomPanel, BorderLayout.PAGE_END);
 		// upgrade button
-		JButton upgradeButton = new JButton("Upgrade");
-		upgradeButton.setFocusPainted(false);
-		upgradeButton.setFont(GUI.LARGE_FONT);
-		upgradeButton.addActionListener((ActionEvent e1) -> {
-			try {
-				dbConn.upgradeBuilding(this.id);
-				// TODO: update this.bt do reflect update
-			} catch (SQLException e2) {
-				JOptionPane.showMessageDialog(new JFrame(), "Can't upgrade building: " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			}
-			makeInfoPanel(dbConn, infoFrame, infoPanel, basePanel, userPanel);
-			GUI.makeUserPanel(dbConn, userPanel); // fix user's gold/elixir bars
-			GUI.makeBasePanel(dbConn, basePanel, userPanel);
-		});
-		bottomPanel.add(upgradeButton);
-		// delete button
-		JButton deleteButton = new JButton("Delete");
-		deleteButton.setFocusPainted(false);
-		deleteButton.setFont(GUI.LARGE_FONT);
-		deleteButton.addActionListener((ActionEvent e2) -> {
-			dbConn.deleteBuilding(this.id);
-			infoFrame.dispose();
-			GUI.makeBasePanel(dbConn, basePanel, userPanel);
-		});
-		bottomPanel.add(deleteButton);
-		
+		if (auth.userId() == userId) {
+			JButton upgradeButton = new JButton("Upgrade");
+			upgradeButton.setFocusPainted(false);
+			upgradeButton.setFont(GUI.LARGE_FONT);
+			upgradeButton.addActionListener((ActionEvent e1) -> {
+				try {
+					dbConn.upgradeBuilding(auth.userId(), this.id);
+					// TODO: update this.bt do reflect update
+				} catch (SQLException e2) {
+					JOptionPane.showMessageDialog(new JFrame(), "Can't upgrade building: " + e2.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+				}
+				makeInfoPanel(dbConn, auth, userId, infoFrame, infoPanel, basePanel, userPanel);
+				GUI.makeUserPanel(dbConn, auth, userPanel); // fix user's gold/elixir bars
+				GUI.makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
+			});
+			bottomPanel.add(upgradeButton);
+			// delete button
+			JButton deleteButton = new JButton("Delete");
+			deleteButton.setFocusPainted(false);
+			deleteButton.setFont(GUI.LARGE_FONT);
+			deleteButton.addActionListener((ActionEvent e2) -> {
+				dbConn.deleteBuilding(this.id);
+				infoFrame.dispose();
+				GUI.makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
+			});
+			bottomPanel.add(deleteButton);
+		}
+
 		infoPanel.revalidate();
 		infoPanel.repaint();
 	}
-	
-	public final JButton makeButton(DatabaseConn dbConn, JPanel basePanel, JPanel userPanel) {
+
+	public final JButton makeButton(DatabaseConn dbConn, Auth auth, int userId, JPanel basePanel, JPanel userPanel) {
 		// init
 		Image buildingImage;
 		JButton button = new JButton();
-//		button.setPreferredSize(new Dimension(50 * this.buildingType.size, 50 * this.buildingType.size));
+		// button.setPreferredSize(new Dimension(50 * this.buildingType.size, 50 *
+		// this.buildingType.size));
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setContentAreaFilled(false);
 		// image
 		try {
-			buildingImage = ImageIO.read(new File("src\\clash\\resources\\" + buildingType.name + buildingType.level + ".png"))
+			buildingImage = ImageIO
+					.read(new File("src\\clash\\resources\\" + buildingType.name + buildingType.level + ".png"))
 					.getScaledInstance(32 * buildingType.size, 32 * buildingType.size, 100);
 			button.setIcon(new ImageIcon(buildingImage));
 		} catch (IOException e1) {
@@ -110,13 +117,13 @@ public class Building {
 			// INIT
 			JFrame infoFrame = new JFrame();
 			infoFrame.setLayout(new BorderLayout());
-//			infoFrame.setResizable(false);
+			// infoFrame.setResizable(false);
 			infoFrame.setSize(500, 350);
 
 			JPanel infoPanel = new JPanel(new BorderLayout());
-			this.makeInfoPanel(dbConn, infoFrame, infoPanel, basePanel, userPanel);
+			this.makeInfoPanel(dbConn, auth, userId, infoFrame, infoPanel, basePanel, userPanel);
 			infoFrame.add(infoPanel);
-			
+
 			// FINISH
 			infoFrame.setVisible(true);
 		});
