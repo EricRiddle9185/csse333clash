@@ -6,7 +6,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimerTask;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -71,6 +73,14 @@ public class GUI {
 
 		JPanel mainPanel = new JPanel();
 		makeMainPanel(dbConn, auth, mainPanel);
+
+		java.util.Timer timer = new java.util.Timer(); // loop that updates the base panel every second to check for buildings done
+		timer.schedule( new TimerTask() {
+		    public void run() {
+		    	makeBasePanel(dbConn, auth, auth.userId(), (JPanel)mainPanel.getComponent(0), mainPanel);
+		    }
+		 }, 0, 1000);
+
 		mainFrame.add(mainPanel);
 		mainFrame.setVisible(true);
 	}

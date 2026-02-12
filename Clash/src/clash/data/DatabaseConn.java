@@ -7,7 +7,9 @@ import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
@@ -206,10 +208,17 @@ public class DatabaseConn {
                 int id = results.getInt("id");
                 int x = results.getInt("posx");
                 int y = results.getInt("posy");
-                Date creationTime = results.getDate("CreationTime");
+                Date creationDate = results.getDate("CreationTime");
+                Time creationTime = results.getTime("CreationTime");
 
                 Calendar calendar = Calendar.getInstance();
-                calendar.setTime(creationTime);
+                calendar.setTime(creationDate);
+//                calendar.set(Calendar.YEAR, creationDate.getYear());
+//                calendar.set(Calendar.MONTH, creationDate.getMonth());
+//                calendar.set(Calendar.DATE, creationDate.getDate());
+                calendar.set(Calendar.HOUR, creationTime.getHours());
+                calendar.set(Calendar.MINUTE, creationTime.getMinutes());
+                calendar.set(Calendar.SECOND, creationTime.getSeconds());
                 buildings.add(new Building(id, buildingType, calendar, x, y));
             }
 

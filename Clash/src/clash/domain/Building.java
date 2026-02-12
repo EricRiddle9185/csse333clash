@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -104,8 +105,9 @@ public class Building {
 		button.setContentAreaFilled(false);
 		// image
 		try {
+			String fileName = this.getImageFile();
 			buildingImage = ImageIO
-					.read(new File("src\\clash\\resources\\" + buildingType.name + buildingType.level + ".png"))
+					.read(new File(fileName))
 					.getScaledInstance(32 * buildingType.size, 32 * buildingType.size, 100);
 			button.setIcon(new ImageIcon(buildingImage));
 		} catch (IOException e1) {
@@ -128,5 +130,13 @@ public class Building {
 			infoFrame.setVisible(true);
 		});
 		return button;
+	}
+	
+	private String getImageFile() {
+		String fileName = "src\\clash\\resources\\Under Construction.png";
+		if (Calendar.getInstance().getTimeInMillis() - this.creationTime.getTimeInMillis() > this.buildingType.buildTime * 1000) {
+			fileName = "src\\clash\\resources\\" + buildingType.name + buildingType.level + ".png";
+		}
+		return fileName;
 	}
 }
