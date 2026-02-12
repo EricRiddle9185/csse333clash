@@ -75,8 +75,8 @@ public class Building {
 							JOptionPane.ERROR_MESSAGE);
 				}
 				makeInfoPanel(dbConn, auth, userId, infoFrame, infoPanel, basePanel, userPanel);
-				GUI.makeUserPanel(dbConn, auth, userPanel); // fix user's gold/elixir bars
-				GUI.makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
+//				GUI.makeUserPanel(dbConn, auth, userPanel); // fix user's gold/elixir bars
+//				GUI.makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
 			});
 			bottomPanel.add(upgradeButton);
 			// delete button

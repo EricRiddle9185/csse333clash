@@ -34,6 +34,7 @@ public class GUI {
 	private static int selected_building_category = 0;
 	private static int selected_building_num = 0;
 	private static boolean build_mode = false;
+	private static JPanel basePanel; // need to be global to allow for auto-refresh
 
 	// test data
 	// private static final BuildingType CANNON = new Defense(1, "Cannon", 1, 10,
@@ -77,7 +78,7 @@ public class GUI {
 		java.util.Timer timer = new java.util.Timer(); // loop that updates the base panel every second to check for buildings done
 		timer.schedule( new TimerTask() {
 		    public void run() {
-		    	makeBasePanel(dbConn, auth, auth.userId(), (JPanel)mainPanel.getComponent(0), mainPanel);
+		    	makeBasePanel(dbConn, auth, auth.userId(), basePanel, mainPanel);
 		    }
 		 }, 0, 1000);
 
@@ -140,7 +141,7 @@ public class GUI {
 		GridBagConstraints gbc;
 
 		// BASE PANEL
-		JPanel basePanel = new JPanel();
+		basePanel = new JPanel();
 		basePanel.setPreferredSize(new Dimension(640, 640));
 		basePanel.setBackground(Color.GREEN.darker());
 		basePanel.setBorder(BorderFactory.createMatteBorder(15, 15, 15, 15, Color.GREEN.darker().darker()));
