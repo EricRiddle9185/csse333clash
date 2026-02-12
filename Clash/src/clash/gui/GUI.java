@@ -2,11 +2,9 @@ package clash.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
-import java.util.Calendar;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -329,10 +327,10 @@ public class GUI {
 		userPanel.add(username);
 		// GOLD BAR
 		int gold = dbConn.getGold(auth.userId());
-		int maxGold = 10000;
+		int maxGold = dbConn.getGoldCapacity(auth.userId());
 		JPanel goldPanel = new JPanel();
 		goldPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		JLabel goldLabel = new JLabel("Gold: ");
+		JLabel goldLabel = new JLabel("Gold (" + gold + "/" + maxGold + "): ");
 		goldLabel.setFont(MEDIUM_FONT);
 		goldPanel.add(goldLabel);
 		JProgressBar goldBar = new JProgressBar();
@@ -343,10 +341,10 @@ public class GUI {
 		userPanel.add(goldPanel);
 		// ELIXIR BAR
 		int elixir = dbConn.getElixir(auth.userId());
-		int maxElixir = 10000;
+		int maxElixir = dbConn.getElixirCapacity(auth.userId());
 		JPanel elixirPanel = new JPanel();
 		elixirPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		JLabel elixirLabel = new JLabel("Elixir: ");
+		JLabel elixirLabel = new JLabel("Elixir (" + elixir + "/" + maxElixir + "): ");
 		elixirLabel.setFont(MEDIUM_FONT);
 		elixirPanel.add(elixirLabel);
 		JProgressBar elixirBar = new JProgressBar();
