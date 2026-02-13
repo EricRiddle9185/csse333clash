@@ -274,7 +274,7 @@ public class DatabaseConn {
 
     public int getElixir(int playerID) {
         try {
-            CallableStatement stmt = this.conn.prepareCall("{? = call GetElixir(?)}");
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetResource(?, 'elixir')}");
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.setInt(2, playerID);
             ResultSet results = stmt.executeQuery();
@@ -307,7 +307,7 @@ public class DatabaseConn {
 
     public int getGold(int playerID) {
         try {
-            CallableStatement stmt = this.conn.prepareCall("{? = call GetGold(?)}");
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetResource(?, 'gold')}");
             stmt.registerOutParameter(1, Types.INTEGER);
             stmt.setInt(2, playerID);
             ResultSet results = stmt.executeQuery();
