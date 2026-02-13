@@ -2,11 +2,9 @@ package clash.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
-import java.util.Calendar;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -35,25 +33,7 @@ public class GUI {
 	private static int selected_building_num = 0;
 	private static boolean build_mode = false;
 	private static JPanel basePanel; // need to be global to allow for auto-refresh
-
-	// test data
-	// private static final BuildingType CANNON = new Defense(1, "Cannon", 1, 10,
-	// 100, 1, 100, 0, 10, 10, "Single", "Ground");
-	// private static final BuildingType ARCHER_TOWER = new Defense(6, "Archer
-	// Tower", 1, 60, 200, 2, 250, 0, 5, 20, "Single", "Any");
-	// private static final BuildingType WIZARD_TOWER = new Defense(7, "Wizard
-	// Tower", 1, 300, 300, 3, 500, 0, 5, 10, "Multi", "Any");
-	// private static final ArrayList<BuildingType> DEFENSES = new ArrayList<>(
-	// Arrays.asList(CANNON, ARCHER_TOWER, WIZARD_TOWER));
-
-	// more test data
-	// private static final Building BUILDING_A = new Building(CANNON, null, 2, 3);
-	// private static final Building BUILDING_B = new Building(ARCHER_TOWER, null,
-	// 8, 2);
-	// private static final Building BUILDING_C = new Building(WIZARD_TOWER, null,
-	// 5, 7);
-	// private static final ArrayList<Building> PLAYER_BUILDINGS = new
-	// ArrayList<>();
+	private static JPanel userPanel; // need to be global to allow for auto-refresh
 
 	// DB connection info
 	private static final String SERVER = "golem.csse.rose-hulman.edu";
@@ -69,6 +49,7 @@ public class GUI {
 		JFrame mainFrame = new JFrame("Clash of Clans");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setSize(1140, 680);
+		mainFrame.setResizable(false);
 
 		handleLogin(dbConn, auth, mainFrame);
 
@@ -78,9 +59,13 @@ public class GUI {
 		java.util.Timer timer = new java.util.Timer(); // loop that updates the base panel every second to check for buildings done
 		timer.schedule( new TimerTask() {
 		    public void run() {
-		    	makeBasePanel(dbConn, auth, auth.userId(), basePanel, mainPanel);
+		    	makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
+		    	basePanel.revalidate();
+		    	basePanel.repaint();
+		    	mainPanel.revalidate();
+		    	mainPanel.repaint();
 		    }
-		 }, 0, 1000);
+		 }, 0, 100);
 
 		mainFrame.add(mainPanel);
 		mainFrame.setVisible(true);
@@ -137,8 +122,11 @@ public class GUI {
 	private static void makeMainPanel(DatabaseConn dbConn, Auth auth, JPanel mainPanel) {
 		mainPanel.removeAll();
 		mainPanel.setLayout(new GridBagLayout());
-		// mainFrame.setResizable(false);
 		GridBagConstraints gbc;
+
+		// USER PANEL
+		userPanel = new JPanel();
+		makeUserPanel(dbConn, auth, userPanel);
 
 		// BASE PANEL
 		basePanel = new JPanel();
@@ -149,10 +137,6 @@ public class GUI {
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.weightx = 1;
-
-		// USER PANEL
-		JPanel userPanel = new JPanel();
-		makeUserPanel(dbConn, auth, userPanel);
 
 		// BASE PANEL cont'd
 		makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
@@ -327,6 +311,9 @@ public class GUI {
 		username.setFont(LARGE_FONT);
 		username.setAlignmentX(Component.CENTER_ALIGNMENT);
 		userPanel.add(username);
+		// hack
+		UIManager.put("ProgressBar.selectionBackground", Color.BLACK);
+		UIManager.put("ProgressBar.selectionForeground", Color.BLACK);
 		// GOLD BAR
 		int gold = dbConn.getGold(auth.userId());
 		int maxGold = 10000;
@@ -338,6 +325,8 @@ public class GUI {
 		JProgressBar goldBar = new JProgressBar();
 		goldBar.setForeground(Color.YELLOW);
 		// goldBar.addChangeListener(null);
+		goldBar.setStringPainted(true);
+		goldBar.setString(gold + "/" + maxGold);
 		goldBar.setValue(gold * 100 / maxGold);
 		goldPanel.add(goldBar);
 		userPanel.add(goldPanel);
@@ -352,6 +341,8 @@ public class GUI {
 		JProgressBar elixirBar = new JProgressBar();
 		elixirBar.setForeground(Color.MAGENTA);
 		// elixirBar.addChangeListener(null);
+		elixirBar.setStringPainted(true);
+		elixirBar.setString(elixir + "/" + maxElixir);
 		elixirBar.setValue(elixir * 100 / maxElixir);
 		elixirPanel.add(elixirBar);
 		userPanel.add(elixirPanel);

@@ -59,7 +59,7 @@ public class Building {
 		buildingInfo.setDisabledTextColor(Color.BLACK);
 		infoPanel.add(buildingInfo, BorderLayout.LINE_END);
 		// bottom panel
-		JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
+		JPanel bottomPanel = new JPanel(new GridLayout(1, 3));
 		infoPanel.add(bottomPanel, BorderLayout.PAGE_END);
 		// upgrade button
 		if (auth.userId() == userId) {
@@ -89,6 +89,17 @@ public class Building {
 				GUI.makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
 			});
 			bottomPanel.add(deleteButton);
+			// collect button
+			if (this.buildingType instanceof Collector) { // ignore shameful use of instanceof :(
+				JButton collectButton = new JButton("Collect");
+				collectButton.setFocusPainted(false);
+				collectButton.setFont(GUI.LARGE_FONT);
+				collectButton.addActionListener((ActionEvent e2) -> {
+					dbConn.collectFromCollector(this.id);
+					GUI.makeUserPanel(dbConn, auth, userPanel);
+				});
+				bottomPanel.add(collectButton);
+			}
 		}
 
 		infoPanel.revalidate();
@@ -119,7 +130,7 @@ public class Building {
 			// INIT
 			JFrame infoFrame = new JFrame();
 			infoFrame.setLayout(new BorderLayout());
-			// infoFrame.setResizable(false);
+			infoFrame.setResizable(false);
 			infoFrame.setSize(500, 350);
 
 			JPanel infoPanel = new JPanel(new BorderLayout());

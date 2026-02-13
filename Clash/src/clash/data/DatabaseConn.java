@@ -333,4 +333,17 @@ public class DatabaseConn {
             return 0;
         }
     }
+
+    public boolean collectFromCollector(int buildingID) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call CollectFromCollector(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, buildingID);
+
+            stmt.execute();
+            return true;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
