@@ -10,9 +10,17 @@ import java.sql.Time;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import clash.domain.*;
+import clash.domain.Building;
+import clash.domain.BuildingType;
+import clash.domain.Camp;
+import clash.domain.Collector;
+import clash.domain.Defense;
+import clash.domain.Storage;
+import clash.domain.TroopType;
 
 public class DatabaseConn {
     private static final String URL = "jdbc:sqlserver://${dbServer};databaseName=${dbName};user=${user};password={${pass}};encrypt=false;";
@@ -329,6 +337,67 @@ public class DatabaseConn {
         return 0;
     }
 
+    public int getTroopCapacity(int playerId) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetTroopCapacity(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            ResultSet results = stmt.executeQuery();
+
+            if (results.next()) {
+                return results.getInt("capacity");
+            } else {
+                return 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public Map<TroopType, Integer> getTroops(int playerId) {
+        HashMap<TroopType, Integer> troops = new HashMap<>();
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetTroops(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            ResultSet results = stmt.executeQuery();
+
+            while (results.next()) {
+                int id = results.getInt("id");
+                String name = results.getString("name");
+                int level = results.getInt("level");
+                int damage = results.getInt("damage");
+                int attackRate = results.getInt("attackRate");
+                String damageType = results.getString("damageType");
+                int size = results.getInt("size");
+                String movementType = results.getString("movementType");
+                int movementSpeed = results.getInt("movementSpeed");
+                int amount = results.getInt("amount");
+
+                troops.put(new TroopType(id, name, level, damage, attackRate, damageType, size, movementType,
+                        movementSpeed), amount);
+            }
+
+            return troops;
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            return troops;
+        }
+    }
+
+    public void addTroop(int playerId, int troopId) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call AddTroop(?, ?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            stmt.setInt(3, troopId);
+            stmt.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     public List<String> getPlayers() {
         try {
