@@ -1,6 +1,5 @@
 package clash.data;
 
-import java.security.SecureRandom;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
@@ -9,14 +8,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
-import clash.domain.*;
+import clash.domain.Building;
+import clash.domain.BuildingType;
+import clash.domain.Camp;
+import clash.domain.Collector;
+import clash.domain.Defense;
+import clash.domain.Storage;
+import clash.domain.TroopType;
 
 public class DatabaseConn {
     private static final String URL = "jdbc:sqlserver://${dbServer};databaseName=${dbName};user=${user};password={${pass}};encrypt=false;";
@@ -61,9 +65,9 @@ public class DatabaseConn {
     }
 
     public List<BuildingType> getBuildingTypes() {
-    	// get all buildings
-    	CallableStatement stmt;
-    	ResultSet results;
+        // get all buildings
+        CallableStatement stmt;
+        ResultSet results;
         try {
             stmt = this.conn.prepareCall("{? = call GetBuildingTypes}");
             stmt.registerOutParameter(1, Types.INTEGER);
@@ -71,7 +75,7 @@ public class DatabaseConn {
 
             ArrayList<BuildingType> buildingTypes = new ArrayList<BuildingType>();
             while (results.next()) {
-            	int id = results.getInt("id");
+                int id = results.getInt("id");
                 String name = results.getString("name");
                 int level = results.getInt("level");
                 int buildTime = results.getInt("buildTime");
@@ -82,86 +86,86 @@ public class DatabaseConn {
 
                 buildingTypes.add(new BuildingType(id, name, level, buildTime, maxHealth, size, goldCost, elixirCost));
             }
-            
+
             // replace defenses with defense objects
-			stmt = this.conn.prepareCall("{? = call GetDefenses}");
-			stmt.registerOutParameter(1, Types.INTEGER);
-			results = stmt.executeQuery();
+            stmt = this.conn.prepareCall("{? = call GetDefenses}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            results = stmt.executeQuery();
             while (results.next()) {
-            	int id = results.getInt("id");
-            	int damage = results.getInt("damage");
-            	int attackRate = results.getInt("attackRate");
-            	String damageType = results.getString("damageType");
-            	String target = results.getString("attacksMovementType");
-            	
-            	// replace building type in buildingTypes with subclass
-            	for (int i = 0; i < buildingTypes.size(); i++) {
-					BuildingType old = buildingTypes.get(i);
-            		if (id == old.id) {
-            			buildingTypes.remove(i);
-            			buildingTypes.add(i, new Defense(old, damage, attackRate, damageType, target));
-            			break;
-            		}
-            	}
+                int id = results.getInt("id");
+                int damage = results.getInt("damage");
+                int attackRate = results.getInt("attackRate");
+                String damageType = results.getString("damageType");
+                String target = results.getString("attacksMovementType");
+
+                // replace building type in buildingTypes with subclass
+                for (int i = 0; i < buildingTypes.size(); i++) {
+                    BuildingType old = buildingTypes.get(i);
+                    if (id == old.id) {
+                        buildingTypes.remove(i);
+                        buildingTypes.add(i, new Defense(old, damage, attackRate, damageType, target));
+                        break;
+                    }
+                }
             }
-            
+
             // replace collectors with collector objects
-			stmt = this.conn.prepareCall("{? = call GetCollectors}");
-			stmt.registerOutParameter(1, Types.INTEGER);
-			results = stmt.executeQuery();
+            stmt = this.conn.prepareCall("{? = call GetCollectors}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            results = stmt.executeQuery();
             while (results.next()) {
-            	int id = results.getInt("id");
-            	int goldPerHour = results.getInt("collectsGold");
-            	int elixirPerHour = results.getInt("collectsElixir");
-            	
-            	// replace building type in buildingTypes with subclass
-            	for (int i = 0; i < buildingTypes.size(); i++) {
-					BuildingType old = buildingTypes.get(i);
-            		if (id == old.id) {
-            			buildingTypes.remove(i);
-            			buildingTypes.add(i, new Collector(old, goldPerHour, elixirPerHour));
-            			break;
-            		}
-            	}
+                int id = results.getInt("id");
+                int goldPerHour = results.getInt("collectsGold");
+                int elixirPerHour = results.getInt("collectsElixir");
+
+                // replace building type in buildingTypes with subclass
+                for (int i = 0; i < buildingTypes.size(); i++) {
+                    BuildingType old = buildingTypes.get(i);
+                    if (id == old.id) {
+                        buildingTypes.remove(i);
+                        buildingTypes.add(i, new Collector(old, goldPerHour, elixirPerHour));
+                        break;
+                    }
+                }
             }
-            
+
             // replace storages with storage objects
-			stmt = this.conn.prepareCall("{? = call GetStorages}");
-			stmt.registerOutParameter(1, Types.INTEGER);
-			results = stmt.executeQuery();
+            stmt = this.conn.prepareCall("{? = call GetStorages}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            results = stmt.executeQuery();
             while (results.next()) {
-            	int id = results.getInt("id");
-            	int goldStored = results.getInt("storesGold");
-            	int elixirStored = results.getInt("storesElixir");
-            	
-            	// replace building type in buildingTypes with subclass
-            	for (int i = 0; i < buildingTypes.size(); i++) {
-					BuildingType old = buildingTypes.get(i);
-            		if (id == old.id) {
-            			buildingTypes.remove(i);
-            			buildingTypes.add(i, new Storage(old, goldStored, elixirStored));
-            			break;
-            		}
-            	}
+                int id = results.getInt("id");
+                int goldStored = results.getInt("storesGold");
+                int elixirStored = results.getInt("storesElixir");
+
+                // replace building type in buildingTypes with subclass
+                for (int i = 0; i < buildingTypes.size(); i++) {
+                    BuildingType old = buildingTypes.get(i);
+                    if (id == old.id) {
+                        buildingTypes.remove(i);
+                        buildingTypes.add(i, new Storage(old, goldStored, elixirStored));
+                        break;
+                    }
+                }
             }
 
             // replace camps with camp objects
-			stmt = this.conn.prepareCall("{? = call GetCamps}");
-			stmt.registerOutParameter(1, Types.INTEGER);
-			results = stmt.executeQuery();
+            stmt = this.conn.prepareCall("{? = call GetCamps}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            results = stmt.executeQuery();
             while (results.next()) {
-            	int id = results.getInt("id");
-            	int troopsStored = results.getInt("capacity");
-            	
-            	// replace building type in buildingTypes with subclass
-            	for (int i = 0; i < buildingTypes.size(); i++) {
-					BuildingType old = buildingTypes.get(i);
-            		if (id == old.id) {
-            			buildingTypes.remove(i);
-            			buildingTypes.add(i, new Camp(old, troopsStored));
-            			break;
-            		}
-            	}
+                int id = results.getInt("id");
+                int troopsStored = results.getInt("capacity");
+
+                // replace building type in buildingTypes with subclass
+                for (int i = 0; i < buildingTypes.size(); i++) {
+                    BuildingType old = buildingTypes.get(i);
+                    if (id == old.id) {
+                        buildingTypes.remove(i);
+                        buildingTypes.add(i, new Camp(old, troopsStored));
+                        break;
+                    }
+                }
             }
 
             return buildingTypes;
@@ -169,23 +173,23 @@ public class DatabaseConn {
             throw new RuntimeException(e);
         }
     }
-    
+
     public List<BuildingType> getBasicDefenses() {
-    	List<BuildingType> buildingTypes = this.getBuildingTypes();
-    	buildingTypes.removeIf(x -> !(x.level == 1 && x instanceof Defense));
-    	return buildingTypes;
+        List<BuildingType> buildingTypes = this.getBuildingTypes();
+        buildingTypes.removeIf(x -> !(x.level == 1 && x instanceof Defense));
+        return buildingTypes;
     }
-    
+
     public List<BuildingType> getBasicResources() {
-    	List<BuildingType> buildingTypes = this.getBuildingTypes();
-    	buildingTypes.removeIf(x -> !(x.level == 1 && (x instanceof Collector || x instanceof Storage)));
-    	return buildingTypes;
+        List<BuildingType> buildingTypes = this.getBuildingTypes();
+        buildingTypes.removeIf(x -> !(x.level == 1 && (x instanceof Collector || x instanceof Storage)));
+        return buildingTypes;
     }
 
     public List<BuildingType> getBasicArmies() {
-    	List<BuildingType> buildingTypes = this.getBuildingTypes();
-    	buildingTypes.removeIf(x -> !(x.level == 1 && (x instanceof Camp || x.name.equals("Barracks"))));
-    	return buildingTypes;
+        List<BuildingType> buildingTypes = this.getBuildingTypes();
+        buildingTypes.removeIf(x -> !(x.level == 1 && (x instanceof Camp || x.name.equals("Barracks"))));
+        return buildingTypes;
     }
 
     public List<Building> getBuildings(int playerId, List<BuildingType> buildingTypes) {
@@ -213,9 +217,9 @@ public class DatabaseConn {
 
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(creationDate);
-//                calendar.set(Calendar.YEAR, creationDate.getYear());
-//                calendar.set(Calendar.MONTH, creationDate.getMonth());
-//                calendar.set(Calendar.DATE, creationDate.getDate());
+                // calendar.set(Calendar.YEAR, creationDate.getYear());
+                // calendar.set(Calendar.MONTH, creationDate.getMonth());
+                // calendar.set(Calendar.DATE, creationDate.getDate());
                 calendar.set(Calendar.HOUR, creationTime.getHours());
                 calendar.set(Calendar.MINUTE, creationTime.getMinutes());
                 calendar.set(Calendar.SECOND, creationTime.getSeconds());
@@ -240,79 +244,178 @@ public class DatabaseConn {
             throw new RuntimeException(e);
         }
     }
-    
+
     public boolean placeBuilding(int userId, int buildingTypeID, int posX, int posY) throws SQLException {
-		CallableStatement stmt = this.conn.prepareCall("{? = call PlaceBuilding(?, ?, ?, ?)}");
-		stmt.registerOutParameter(1, Types.INTEGER);
-		stmt.setInt(2, userId);
-		stmt.setInt(3, posX);
-		stmt.setInt(4, posY);
-		stmt.setInt(5, buildingTypeID);
-		stmt.execute();
-//        ResultSet results = stmt.executeQuery();
-		// TODO: do smth with the results?
+        CallableStatement stmt = this.conn.prepareCall("{? = call PlaceBuilding(?, ?, ?, ?)}");
+        stmt.registerOutParameter(1, Types.INTEGER);
+        stmt.setInt(2, userId);
+        stmt.setInt(3, posX);
+        stmt.setInt(4, posY);
+        stmt.setInt(5, buildingTypeID);
+        stmt.execute();
+        // ResultSet results = stmt.executeQuery();
+        // TODO: do smth with the results?
 
-		return true;
+        return true;
     }
-    
+
     public boolean upgradeBuilding(int userId, int buildingID) throws SQLException {
-		CallableStatement stmt = this.conn.prepareCall("{? = call Upgrade(?, ?)}");
-		stmt.registerOutParameter(1, Types.INTEGER);
-		stmt.setInt(2, userId);
-		stmt.setInt(3, buildingID);
-		stmt.execute();
-//        ResultSet results = stmt.executeQuery();
-		// TODO: do smth with the results?
+        CallableStatement stmt = this.conn.prepareCall("{? = call Upgrade(?, ?)}");
+        stmt.registerOutParameter(1, Types.INTEGER);
+        stmt.setInt(2, userId);
+        stmt.setInt(3, buildingID);
+        stmt.execute();
+        // ResultSet results = stmt.executeQuery();
+        // TODO: do smth with the results?
 
-		return true;
+        return true;
     }
-    
+
     public int getElixir(int playerID) {
-		try {
-			CallableStatement stmt = this.conn.prepareCall("{? = call GetElixir(?)}");
-			stmt.registerOutParameter(1, Types.INTEGER);
-			stmt.setInt(2, playerID);
-			ResultSet results = stmt.executeQuery();
-			results.next();
-			int elixir = results.getInt("amount");
-			return elixir;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetElixir(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerID);
+            ResultSet results = stmt.executeQuery();
+            results.next();
+            int elixir = results.getInt("amount");
+            return elixir;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
+
+    public int getElixirCapacity(int playerId) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetResourceCapacity(?, 'elixir')}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            ResultSet results = stmt.executeQuery();
+
+            if (results.next()) {
+                return results.getInt("capacity");
+            } else {
+                return 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public int getGold(int playerID) {
-		try {
-			CallableStatement stmt = this.conn.prepareCall("{? = call GetGold(?)}");
-			stmt.registerOutParameter(1, Types.INTEGER);
-			stmt.setInt(2, playerID);
-			ResultSet results = stmt.executeQuery();
-			results.next();
-			int gold = results.getInt("amount");
-			return gold;
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return 0;
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetGold(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerID);
+            ResultSet results = stmt.executeQuery();
+            results.next();
+            int gold = results.getInt("amount");
+            return gold;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getGoldCapacity(int playerId) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetResourceCapacity(?, 'gold')}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            ResultSet results = stmt.executeQuery();
+
+            if (results.next()) {
+                return results.getInt("capacity");
+            } else {
+                return 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getTroopCapacity(int playerId) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetTroopCapacity(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            ResultSet results = stmt.executeQuery();
+
+            if (results.next()) {
+                return results.getInt("capacity");
+            } else {
+                return 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public Map<TroopType, Integer> getTroops(int playerId) {
+        HashMap<TroopType, Integer> troops = new HashMap<>();
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetTroops(?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            ResultSet results = stmt.executeQuery();
+
+            while (results.next()) {
+                int id = results.getInt("id");
+                String name = results.getString("name");
+                int level = results.getInt("level");
+                int damage = results.getInt("damage");
+                int attackRate = results.getInt("attackRate");
+                String damageType = results.getString("damageType");
+                int size = results.getInt("size");
+                String movementType = results.getString("movementType");
+                int movementSpeed = results.getInt("movementSpeed");
+                int amount = results.getInt("amount");
+
+                troops.put(new TroopType(id, name, level, damage, attackRate, damageType, size, movementType,
+                        movementSpeed), amount);
+            }
+
+            return troops;
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            return troops;
+        }
+    }
+
+    public void addTroop(int playerId, int troopId) {
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call AddTroop(?, ?)}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.setInt(2, playerId);
+            stmt.setInt(3, troopId);
+            stmt.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public List<String> getPlayers() {
-		try {
-			CallableStatement stmt = this.conn.prepareCall("{? = call GetPlayers()}");
-			stmt.registerOutParameter(1, Types.INTEGER);
+        try {
+            CallableStatement stmt = this.conn.prepareCall("{? = call GetPlayers()}");
+            stmt.registerOutParameter(1, Types.INTEGER);
 
-			ResultSet results = stmt.executeQuery();
+            ResultSet results = stmt.executeQuery();
             ArrayList<String> players = new ArrayList<String>();
             while (results.next()) {
                 players.add(results.getString("UName"));
             }
 
             return players;
-		} catch (SQLException e) {
-			e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
 
             return new ArrayList<String>();
-		}
+        }
     }
 
     public int getUserId(String username) {
@@ -328,7 +431,7 @@ public class DatabaseConn {
                 return 0;
             }
         } catch (SQLException e) {
-			e.printStackTrace();
+            e.printStackTrace();
 
             return 0;
         }

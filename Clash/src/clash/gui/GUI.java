@@ -5,7 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TimerTask;
 
 import javax.swing.*;
@@ -31,6 +33,7 @@ public class GUI {
 	private static int[] building_category_sizes = { 3, 4, 2 };
 	private static int selected_building_category = 0;
 	private static int selected_building_num = 0;
+	private static int selected_troop_num = 0;
 	private static boolean build_mode = false;
 	private static JPanel basePanel; // need to be global to allow for auto-refresh
 	private static JPanel userPanel; // need to be global to allow for auto-refresh
@@ -173,6 +176,7 @@ public class GUI {
 
 		// TRAIN PANEL
 		JPanel trainPanel = new JPanel();
+		makeTrainPanel(dbConn, auth, trainPanel);
 		sidePanel.addTab("Train", trainPanel);
 
 		// PLAYERS PANEL
@@ -246,13 +250,16 @@ public class GUI {
 								boolean valid1 = posX + newBuildingType.size <= BASE_WIDTH
 										&& posY + newBuildingType.size <= BASE_HEIGHT;
 								if (!valid1) {
-									JOptionPane.showMessageDialog(new JFrame(), "Can't place building: This placement extends byound the edge of the grid", "Error", JOptionPane.ERROR_MESSAGE);
-								}
-								else {
+									JOptionPane.showMessageDialog(new JFrame(),
+											"Can't place building: This placement extends byound the edge of the grid",
+											"Error", JOptionPane.ERROR_MESSAGE);
+								} else {
 									for (Building b : buildings) {
 										if (isOverlapping(b, posX, posY, newBuildingType.size)) {
 											valid1 = false;
-											JOptionPane.showMessageDialog(new JFrame(), "Can't place building: This placement overlaps with another building", "Error", JOptionPane.ERROR_MESSAGE);
+											JOptionPane.showMessageDialog(new JFrame(),
+													"Can't place building: This placement overlaps with another building",
+													"Error", JOptionPane.ERROR_MESSAGE);
 											break;
 										}
 									}
@@ -316,10 +323,10 @@ public class GUI {
 		UIManager.put("ProgressBar.selectionForeground", Color.BLACK);
 		// GOLD BAR
 		int gold = dbConn.getGold(auth.userId());
-		int maxGold = 10000;
+		int maxGold = dbConn.getGoldCapacity(auth.userId());
 		JPanel goldPanel = new JPanel();
 		goldPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		JLabel goldLabel = new JLabel("Gold: ");
+		JLabel goldLabel = new JLabel("Gold (" + gold + "/" + maxGold + "): ");
 		goldLabel.setFont(MEDIUM_FONT);
 		goldPanel.add(goldLabel);
 		JProgressBar goldBar = new JProgressBar();
@@ -327,15 +334,19 @@ public class GUI {
 		// goldBar.addChangeListener(null);
 		goldBar.setStringPainted(true);
 		goldBar.setString(gold + "/" + maxGold);
-		goldBar.setValue(gold * 100 / maxGold);
+		if (maxGold == 0) {
+			goldBar.setValue(0);
+		} else {
+			goldBar.setValue(gold * 100 / maxGold);
+		}
 		goldPanel.add(goldBar);
 		userPanel.add(goldPanel);
 		// ELIXIR BAR
 		int elixir = dbConn.getElixir(auth.userId());
-		int maxElixir = 10000;
+		int maxElixir = dbConn.getElixirCapacity(auth.userId());
 		JPanel elixirPanel = new JPanel();
 		elixirPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-		JLabel elixirLabel = new JLabel("Elixir: ");
+		JLabel elixirLabel = new JLabel("Elixir (" + elixir + "/" + maxElixir + "): ");
 		elixirLabel.setFont(MEDIUM_FONT);
 		elixirPanel.add(elixirLabel);
 		JProgressBar elixirBar = new JProgressBar();
@@ -343,7 +354,11 @@ public class GUI {
 		// elixirBar.addChangeListener(null);
 		elixirBar.setStringPainted(true);
 		elixirBar.setString(elixir + "/" + maxElixir);
-		elixirBar.setValue(elixir * 100 / maxElixir);
+		if (maxElixir == 0) {
+			elixirBar.setValue(0);
+		} else {
+			elixirBar.setValue(elixir * 100 / maxElixir);
+		}
 		elixirPanel.add(elixirBar);
 		userPanel.add(elixirPanel);
 		// ATTACK BUTTON
@@ -453,5 +468,80 @@ public class GUI {
 
 		playersPanel.revalidate();
 		playersPanel.repaint();
+	}
+
+	private static void makeTrainPanel(DatabaseConn dbConn, Auth auth, JPanel trainPanel) {
+		trainPanel.removeAll();
+		trainPanel.setLayout(new BorderLayout());
+		Map<TroopType, Integer> troops = dbConn.getTroops(auth.userId());
+		int total = 0;
+		for (TroopType troop : troops.keySet()) {
+			total += troop.size * troops.get(troop);
+		}
+		List<Integer> ids = new ArrayList<>();
+		for (TroopType troop : troops.keySet()) {
+			ids.add(troop.id);
+		}
+		int selected_id = ids.get(selected_troop_num);
+
+		TroopType selectedTroop = null;
+		for (TroopType troop : troops.keySet()) {
+			if (troop.id == selected_id) {
+				selectedTroop = troop;
+				break;
+			}
+		}
+
+		// capacity
+		JPanel capacityPanel = new JPanel(new BorderLayout());
+		JLabel capacityLbl = new JLabel("Number Of " + selectedTroop.name + "s: " + troops.get(selectedTroop) + ", Total Troops: " + total + "/" + dbConn.getTroopCapacity(auth.userId()));
+		capacityPanel.add(capacityLbl);
+		trainPanel.add(capacityPanel, BorderLayout.NORTH);
+
+		// INFO
+		JPanel troopInfoPanel = new JPanel(new BorderLayout());
+		JLabel buildingPicture = selectedTroop.getPicture();
+		troopInfoPanel.add(buildingPicture, BorderLayout.CENTER);
+		JTextArea troopInfo = new JTextArea(selectedTroop.getBuildingInfo());
+		troopInfo.setEnabled(false);
+		troopInfo.setBorder(new EmptyBorder(10, 10, 10, 10));
+		troopInfo.setBackground(null);
+		troopInfo.setFont(SMALL_FONT);
+		troopInfo.setDisabledTextColor(Color.BLACK);
+		troopInfoPanel.add(troopInfo, BorderLayout.PAGE_END);
+		trainPanel.add(troopInfoPanel, BorderLayout.CENTER);
+
+		// ARROWS AND BUILD
+		JPanel arrowPanel = new JPanel(new BorderLayout());
+		// left arrow
+		JButton leftArrow = new JButton("<");
+		leftArrow.setFocusPainted(false);
+		leftArrow.setFont(MEDIUM_FONT);
+		leftArrow.addActionListener((ActionEvent e) -> {
+			selected_troop_num = Math.max(0, selected_troop_num - 1);
+			makeTrainPanel(dbConn, auth, trainPanel);
+		});
+		arrowPanel.add(leftArrow, BorderLayout.LINE_START);
+		// troop name button
+		JButton troopButton = new JButton(selectedTroop.name);
+		troopButton.setFont(LARGE_FONT);
+		troopButton.addActionListener(e -> {
+			dbConn.addTroop(auth.userId(), selected_id);
+			makeTrainPanel(dbConn, auth, trainPanel);
+		});
+		arrowPanel.add(troopButton, BorderLayout.CENTER);
+		// right arrow
+		JButton rightArrow = new JButton(">");
+		rightArrow.setFocusPainted(false);
+		rightArrow.setFont(MEDIUM_FONT);
+		rightArrow.addActionListener((ActionEvent e) -> {
+			selected_troop_num = Math.min(troops.size() - 1, selected_troop_num + 1);
+			makeTrainPanel(dbConn, auth, trainPanel);
+		});
+		arrowPanel.add(rightArrow, BorderLayout.LINE_END);
+		trainPanel.add(arrowPanel, BorderLayout.PAGE_END);
+
+		trainPanel.revalidate();
+		trainPanel.repaint();
 	}
 }
