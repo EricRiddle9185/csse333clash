@@ -11,6 +11,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -356,7 +357,7 @@ public class DatabaseConn {
     }
 
     public Map<TroopType, Integer> getTroops(int playerId) {
-        HashMap<TroopType, Integer> troops = new HashMap<>();
+        LinkedHashMap<TroopType, Integer> troops = new LinkedHashMap<>();
         try {
             CallableStatement stmt = this.conn.prepareCall("{? = call GetTroops(?)}");
             stmt.registerOutParameter(1, Types.INTEGER);
