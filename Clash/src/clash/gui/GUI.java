@@ -59,16 +59,17 @@ public class GUI {
 		JPanel mainPanel = new JPanel();
 		makeMainPanel(dbConn, auth, mainPanel);
 
-		java.util.Timer timer = new java.util.Timer(); // loop that updates the base panel every second to check for buildings done
-		timer.schedule( new TimerTask() {
-		    public void run() {
-		    	makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
-		    	basePanel.revalidate();
-		    	basePanel.repaint();
-		    	mainPanel.revalidate();
-		    	mainPanel.repaint();
-		    }
-		 }, 0, 100);
+		java.util.Timer timer = new java.util.Timer(); // loop that updates the base panel every second to check for
+														// buildings done
+		timer.schedule(new TimerTask() {
+			public void run() {
+				makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
+				basePanel.revalidate();
+				basePanel.repaint();
+				mainPanel.revalidate();
+				mainPanel.repaint();
+			}
+		}, 0, 100);
 
 		mainFrame.add(mainPanel);
 		mainFrame.setVisible(true);
@@ -494,7 +495,8 @@ public class GUI {
 
 		// capacity
 		JPanel capacityPanel = new JPanel(new BorderLayout());
-		JLabel capacityLbl = new JLabel("Number Of " + selectedTroop.name + "s: " + troops.get(selectedTroop) + ", Total Troops: " + total + "/" + dbConn.getTroopCapacity(auth.userId()));
+		JLabel capacityLbl = new JLabel("Number Of " + selectedTroop.name + "s: " + troops.get(selectedTroop)
+				+ ", Total Troops: " + total + "/" + dbConn.getTroopCapacity(auth.userId()));
 		capacityPanel.add(capacityLbl);
 		trainPanel.add(capacityPanel, BorderLayout.NORTH);
 
@@ -502,7 +504,7 @@ public class GUI {
 		JPanel troopInfoPanel = new JPanel(new BorderLayout());
 		JLabel buildingPicture = selectedTroop.getPicture();
 		troopInfoPanel.add(buildingPicture, BorderLayout.CENTER);
-		JTextArea troopInfo = new JTextArea(selectedTroop.getBuildingInfo());
+		JTextArea troopInfo = new JTextArea(selectedTroop.getTroopInfo());
 		troopInfo.setEnabled(false);
 		troopInfo.setBorder(new EmptyBorder(10, 10, 10, 10));
 		troopInfo.setBackground(null);
@@ -522,14 +524,30 @@ public class GUI {
 			makeTrainPanel(dbConn, auth, trainPanel);
 		});
 		arrowPanel.add(leftArrow, BorderLayout.LINE_START);
-		// troop name button
-		JButton troopButton = new JButton(selectedTroop.name);
-		troopButton.setFont(LARGE_FONT);
-		troopButton.addActionListener(e -> {
+		JPanel buttonPanel = new JPanel(new BorderLayout());
+		// create troop button
+		JButton addTroopButton = new JButton("Add " + selectedTroop.name);
+		addTroopButton.setFont(MEDIUM_FONT);
+		addTroopButton.addActionListener(e -> {
 			dbConn.addTroop(auth.userId(), selected_id);
 			makeTrainPanel(dbConn, auth, trainPanel);
 		});
-		arrowPanel.add(troopButton, BorderLayout.CENTER);
+		buttonPanel.add(addTroopButton, BorderLayout.LINE_START);
+		// train troops button
+		JButton trainTroopsButton = new JButton("Raise Levels");
+		trainTroopsButton.setFont(MEDIUM_FONT);
+		trainTroopsButton.addActionListener(e -> {
+			try {
+				dbConn.raiseTroopLevel(auth.userId(), selected_id);
+			} catch (SQLException e1) {
+				JOptionPane.showMessageDialog(new JFrame(),
+						"Can't raise level: " + e1.getMessage(), "Error",
+						JOptionPane.ERROR_MESSAGE);
+			}
+			makeTrainPanel(dbConn, auth, trainPanel);
+		});
+		buttonPanel.add(trainTroopsButton, BorderLayout.LINE_END);
+		arrowPanel.add(buttonPanel, BorderLayout.CENTER);
 		// right arrow
 		JButton rightArrow = new JButton(">");
 		rightArrow.setFocusPainted(false);

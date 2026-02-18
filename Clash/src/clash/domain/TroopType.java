@@ -32,22 +32,24 @@ public class TroopType {
         this.movementSpeed = movementSpeed;
     }
 
-    public String getBuildingInfo() {
-        return "Damage: " + this.damage + "\n"
+    public String getTroopInfo() {
+        return "Level: " + this.level + "\n"
+                + "Damage: " + this.damage + "\n"
                 + "Attack Rate: " + this.attackRate + "\n"
                 + "Speed: " + this.movementSpeed + "\n"
                 + "Movement: " + this.movementType;
     }
-	
-	public final JLabel getPicture() {
-		Image image;
-		JLabel label = null;
-		try {
-			image = ImageIO.read(new File("src\\clash\\resources\\" + this.name + this.level + ".png")).getScaledInstance(200, 200, 100);
-			label = new JLabel(new ImageIcon(image));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		return label;
-	}
+
+    public final JLabel getPicture() {
+        Image image;
+        JLabel label = null;
+        try {
+            image = ImageIO.read(new File("src\\clash\\resources\\" + this.name + ".png"))
+                    .getScaledInstance(200, 200, 100);
+            label = new JLabel(new ImageIcon(image));
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        return label;
+    }
 }
