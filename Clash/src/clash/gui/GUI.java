@@ -2,6 +2,7 @@ package clash.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
@@ -37,6 +38,7 @@ public class GUI {
 	private static boolean build_mode = false;
 	private static JPanel basePanel; // need to be global to allow for auto-refresh
 	private static JPanel userPanel; // need to be global to allow for auto-refresh
+	private static boolean showUserbase = true; // whether user's base is shown, dont auto-refresh if not
 
 	// DB connection info
 	private static final String SERVER = "golem.csse.rose-hulman.edu";
@@ -62,11 +64,13 @@ public class GUI {
 		java.util.Timer timer = new java.util.Timer(); // loop that updates the base panel every second to check for buildings done
 		timer.schedule( new TimerTask() {
 		    public void run() {
-		    	makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
-		    	basePanel.revalidate();
-		    	basePanel.repaint();
-		    	mainPanel.revalidate();
-		    	mainPanel.repaint();
+		    	if (showUserbase) {
+					makeBasePanel(dbConn, auth, auth.userId(), basePanel, userPanel);
+					basePanel.revalidate();
+					basePanel.repaint();
+					mainPanel.revalidate();
+					mainPanel.repaint();
+		    	}
 		    }
 		 }, 0, 100);
 
@@ -455,12 +459,24 @@ public class GUI {
 		playersPanel.removeAll();
 
 		JPanel listPanel = new JPanel(new GridLayout(0, 1));
+
+		// button to toggle showing the user's base
+		JButton userEntry = new JButton("Me");
+		userEntry.addActionListener((ActionEvent e) -> {
+			showUserbase = true;
+		});
+		listPanel.add(userEntry);
+
+		// other players
 		for (String player : dbConn.getPlayers()) {
 			if (player.equals(auth.user()))
 				continue;
 
 			JButton entry = new JButton(player);
-			entry.addActionListener(e -> makeBasePanel(dbConn, auth, dbConn.getUserId(player), basePanel, null));
+			entry.addActionListener((ActionEvent e) -> {
+				showUserbase = false;
+				makeBasePanel(dbConn, auth, dbConn.getUserId(player), basePanel, null);
+			});
 			listPanel.add(entry);
 		}
 		JScrollPane scrollPane = new JScrollPane(listPanel);
