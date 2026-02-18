@@ -400,6 +400,14 @@ public class DatabaseConn {
         }
     }
 
+    public void raiseTroopLevel(int playerId, int troopId) throws SQLException {
+        CallableStatement stmt = this.conn.prepareCall("{? = call RaiseTroopLevel(?, ?)}");
+        stmt.registerOutParameter(1, Types.INTEGER);
+        stmt.setInt(2, playerId);
+        stmt.setInt(3, troopId);
+        stmt.execute();
+    }
+
     public List<String> getPlayers() {
         try {
             CallableStatement stmt = this.conn.prepareCall("{? = call GetPlayers()}");
